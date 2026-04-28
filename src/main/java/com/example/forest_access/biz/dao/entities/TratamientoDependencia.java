@@ -2,7 +2,15 @@ package com.example.forest_access.biz.dao.entities;
 
 import com.example.forest_access.biz.dao.entities.embeddables.TratamientoDependenciaId;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
+@Getter
+@Setter
+@ToString
+@RequiredArgsConstructor
 @Entity
 @Table(name = "tratamiento_dependencia")
 public class TratamientoDependencia {

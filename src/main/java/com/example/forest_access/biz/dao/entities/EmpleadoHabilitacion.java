@@ -2,9 +2,17 @@ package com.example.forest_access.biz.dao.entities;
 
 import com.example.forest_access.biz.dao.entities.embeddables.EmpleadoHabilitacionId;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 import java.time.LocalDate;
 
+@Getter
+@Setter
+@ToString
+@RequiredArgsConstructor
 @Entity
 @Table(name = "empleado_habilitacion")
 public class EmpleadoHabilitacion {
