@@ -5,9 +5,9 @@ spring:
   main:
     allow-bean-definition-overriding: true
   datasource:
-    url: jdbc:mysql://159.54.152.194:3306/forest_access?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-    username: root
-    password: "eO&AFfc9g-PAWGlGU"
+    url: ${DB_URL}
+    username: ${USERNAME}
+    password: ${PASSWORD}
     driverClassName: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:

@@ -19,8 +19,8 @@ public class WebSecurityConfig{
         http.csrf(csrf -> csrf.disable())
                 .addFilterBefore(new SeguridadConfig(), UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/ejemplo/nose").permitAll()
-                        .requestMatchers("/api/v1/jobs/**").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers("*").permitAll()
+                        .requestMatchers("*").hasAuthority("ROLE_ADMIN")
                         .anyRequest()
                         .authenticated());
         return http.build();
