@@ -1,0 +1,30 @@
+package com.example.forest_access.biz.dao.entities;
+
+import jakarta.persistence.*;
+import java.math.BigDecimal;
+
+@Entity
+@Table(name = "campo")
+public class Campo {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_campo")
+    private Integer idCampo;
+
+    @Column(nullable = false)
+    private String nombre;
+
+    private String padron;
+
+    @Column(name = "superficie_total", precision = 10, scale = 2)
+    private BigDecimal superficieTotal;
+
+    @Column(name = "coord_lat", precision = 10, scale = 7)
+    private BigDecimal coordLat;
+
+    @Column(name = "coord_lng", precision = 10, scale = 7)
+    private BigDecimal coordLng;
+
+    // getters y setters
+}
