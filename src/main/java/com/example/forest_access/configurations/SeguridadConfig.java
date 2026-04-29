@@ -18,51 +18,52 @@ import java.util.stream.Collectors;
 @Configuration
 public class SeguridadConfig extends OncePerRequestFilter {
 
-    private String clave = "TIP2026";
-
+    private final String clave = "TIP2026";
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        try{
-            if(validarUsoDeToken(request)){
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain)
+            throws ServletException, IOException {
+        try {
+            if (validarUsoDeToken(request)) {
                 Claims claims = validarToken(request);
-                if(claims.get("authorities") != null){
+                if (claims.get("authorities") != null) {
                     crearAutorizacion(claims);
-                }else{
+                } else {
                     SecurityContextHolder.clearContext();
                 }
-            }else{
+            } else {
                 SecurityContextHolder.clearContext();
             }
-            filterChain.doFilter(request,response);
-        }catch(ExpiredJwtException | UnsupportedJwtException | MalformedJwtException e){
+            filterChain.doFilter(request, response);
+        } catch (ExpiredJwtException | UnsupportedJwtException | MalformedJwtException e) {
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            ((HttpServletResponse)response).sendError(HttpServletResponse.SC_FORBIDDEN, e.getMessage());
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, e.getMessage());
         }
     }
 
-    private boolean validarUsoDeToken(HttpServletRequest request){
+    private boolean validarUsoDeToken(HttpServletRequest request) {
         String autenticacion = request.getHeader("Authorization");
-        if(autenticacion == null || !autenticacion.startsWith("Bearer")){
-            return false;
-        }
-        return true;
+        return autenticacion != null && autenticacion.startsWith("Bearer");
     }
 
-    private Claims validarToken(HttpServletRequest request){
+    private Claims validarToken(HttpServletRequest request) {
         String autenticacion = request.getHeader("Authorization").replace("Bearer ", "");
-        return Jwts.parser().setSigningKey(clave.getBytes())
+        return Jwts.parser()
+                .setSigningKey(clave.getBytes())
                 .parseClaimsJws(autenticacion)
                 .getBody();
     }
 
-    private void crearAutorizacion(Claims claims){
-        List<String> perfiles = (List<String>)claims.get("authorities");
+    private void crearAutorizacion(Claims claims) {
+        List<String> perfiles = (List<String>) claims.get("authorities");
         UsernamePasswordAuthenticationToken authenticationToken =
                 new UsernamePasswordAuthenticationToken(
                         claims.getSubject(),
                         null,
-                        perfiles.stream().map(SimpleGrantedAuthority:: new)
+                        perfiles.stream()
+                                .map(SimpleGrantedAuthority::new)
                                 .collect(Collectors.toList())
                 );
         SecurityContextHolder.getContext().setAuthentication(authenticationToken);

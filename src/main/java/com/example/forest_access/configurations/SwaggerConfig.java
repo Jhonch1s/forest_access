@@ -12,15 +12,16 @@ public class SwaggerConfig {
     @Bean
     public OpenAPI config() {
         Info info = new Info();
-        info.setTitle("Agencia Turismo");
-        info.setDescription("Agencia Turismo");
-        return new OpenAPI().info(
-                info
-        );
+        info.setTitle("Forest Access");
+        info.setDescription("Sistema de gestión forestal");
+        return new OpenAPI().info(info);
     }
 
     @Bean
     public GroupedOpenApi api() {
-        return GroupedOpenApi.builder().group("Agencia Turismo").pathsToMatch("/api/v1/**").build();
+        return GroupedOpenApi.builder()
+                .group("Forest Access")
+                .pathsToMatch("/forest_access/api/**")
+                .build();
     }
 }
