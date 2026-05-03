@@ -2,10 +2,7 @@ package com.example.forest_access.biz.dao.entities;
 
 import com.example.forest_access.biz.dao.entities.embeddables.EmpleadoCuadrillaId;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 
 import java.time.LocalDate;
 
@@ -34,6 +31,7 @@ public class EmpleadoCuadrilla {
     private LocalDate fechaFin;                  // NULL = pertenece actualmente
 
     private String rol;                          // "Capataz", "Peón puntero", "Operario"
+
 
     // getters y setters
 }

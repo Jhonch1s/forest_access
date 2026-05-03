@@ -28,7 +28,7 @@ public class CategoriaEmpleadoController {
         return ResponseEntity.ok(service.findById(id));
     }
 
-    @PostMapping
+    @PostMapping("/create")
     public ResponseEntity<CategoriaEmpleado> create(@RequestBody CategoriaEmpleado categoria) {
         CategoriaEmpleado creada = service.create(categoria);
         URI location = URI.create("/api/categorias-empleado/" + creada.getIdCategoria());

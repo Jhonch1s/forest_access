@@ -1,11 +1,15 @@
 package com.example.forest_access.biz.dao.entities.embeddables;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.Objects;
 
+@Getter
+@Setter
 @Embeddable
 public class EmpleadoCuadrillaId implements Serializable {
 

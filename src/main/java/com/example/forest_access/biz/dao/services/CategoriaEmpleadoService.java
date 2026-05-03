@@ -10,7 +10,8 @@ import java.util.List;
 
 
 @Service
-public class CategoriaEmpleadoService {
+public class
+CategoriaEmpleadoService {
 
     private final CategoriaEmpleadoRepository repository;
 
