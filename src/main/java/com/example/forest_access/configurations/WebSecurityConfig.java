@@ -17,12 +17,8 @@ import java.util.List;
 @EnableWebSecurity
 public class WebSecurityConfig {
 
-    private final SeguridadConfig jwtFilter;
-
-    // Inyectamos el filtro en lugar de crear uno nuevo con 'new'
-    public WebSecurityConfig(SeguridadConfig jwtFilter) {
-        this.jwtFilter = jwtFilter;
-    }
+    @org.springframework.beans.factory.annotation.Value("${jwt.secret}")
+    private String jwtSecret;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -39,7 +35,7 @@ public class WebSecurityConfig {
                         .anyRequest().authenticated()
                 )
                 // Agregamos el filtro de JWT
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(new SeguridadConfig(jwtSecret), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

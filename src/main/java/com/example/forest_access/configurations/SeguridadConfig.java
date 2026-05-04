@@ -5,7 +5,6 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -15,15 +14,18 @@ import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Configuration
 public class SeguridadConfig extends OncePerRequestFilter {
 
-    private final String clave = "TIP2026";
+    private final String clave;
+
+    public SeguridadConfig(String clave) {
+        this.clave = clave;
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain)
+            HttpServletResponse response,
+            FilterChain filterChain)
             throws ServletException, IOException {
         try {
             // SI NO HAY TOKEN, dejamos pasar la petición para que
@@ -63,14 +65,12 @@ public class SeguridadConfig extends OncePerRequestFilter {
 
     private void crearAutorizacion(Claims claims) {
         List<String> perfiles = (List<String>) claims.get("authorities");
-        UsernamePasswordAuthenticationToken authenticationToken =
-                new UsernamePasswordAuthenticationToken(
-                        claims.getSubject(),
-                        null,
-                        perfiles.stream()
-                                .map(SimpleGrantedAuthority::new)
-                                .collect(Collectors.toList())
-                );
+        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
+                claims.getSubject(),
+                null,
+                perfiles.stream()
+                        .map(SimpleGrantedAuthority::new)
+                        .collect(Collectors.toList()));
         SecurityContextHolder.getContext().setAuthentication(authenticationToken);
     }
 }

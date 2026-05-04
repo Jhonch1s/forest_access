@@ -1,5 +1,7 @@
 server:
   port: 8081
+jwt:
+  secret: ${JWT_SECRET:TIP2026}
 
 spring:
   main:
