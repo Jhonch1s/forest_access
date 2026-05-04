@@ -1,0 +1,47 @@
+package com.example.forest_access.api.controllers;
+
+
+import com.example.forest_access.biz.dao.entities.Rodal;
+import com.example.forest_access.biz.dao.services.RodalService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.net.URI;
+import java.util.List;
+
+@RestController
+@RequestMapping("/forest_access/api/rodales")
+public class RodalController {
+
+    private RodalService rodalService;
+
+    public RodalController(RodalService rodalService) {
+        this.rodalService = rodalService;
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity <List<Rodal>> mostrarRodales(){
+        return ResponseEntity.ok(rodalService.mostrarRodales());
+    }
+
+    @PostMapping("/create")
+    public ResponseEntity <Rodal> crearRodal(@RequestBody Rodal rodal){
+        Rodal nuevoRodal = rodalService.createRodal(rodal);
+        URI location = URI.create("/forest_access/api/rodales/" + nuevoRodal.getIdRodal());
+        return ResponseEntity.created(location).body(nuevoRodal);
+    }
+
+    @PutMapping("/update/{id}")
+    public ResponseEntity <Rodal> actualizarRodal(@PathVariable Integer id,
+                                                  @RequestBody Rodal rodal){
+        return ResponseEntity.ok(rodalService.updateRodal(id,rodal));
+    }
+
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity <Rodal> borrarRodal(@PathVariable Integer id){
+        return ResponseEntity.ok(rodalService.deleteRodal(id));
+    }
+
+
+
+}
