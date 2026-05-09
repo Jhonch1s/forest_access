@@ -3,6 +3,7 @@ package com.example.forest_access.biz.dao.services;
 import com.example.forest_access.biz.dao.entities.Campo;
 import com.example.forest_access.biz.dao.entities.Usuario;
 import com.example.forest_access.biz.dao.repositories.UsuarioRepository;
+import com.example.forest_access.dto.UsuarioDTO;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.BeanUtils;
@@ -26,28 +27,36 @@ public class UsuarioService {
     }
 
     @Transactional
-    public List<Usuario> mostrarUsuarios() {
-        return repo.findAll();
+    public List<UsuarioDTO> mostrarUsuarios() {
+
+        return repo.findAll().stream().map(u ->{
+            UsuarioDTO dto = new UsuarioDTO();
+            BeanUtils.copyProperties(u, dto);
+            return dto;
+        }).toList();
     }
 
     @Transactional
-    public Usuario createUsuario(Usuario usuario) {
-        return repo.save(usuario);
+    public Usuario createUsuario(UsuarioDTO usuario) {
+        Usuario usu = new Usuario();
+        usu.setNombreUsuario(usuario.getNombreUsuario());
+        usu.setPassword(usuario.getPassword());
+        return repo.save(usu);
     }
 
     @Transactional
-    public Usuario updateUsuario(Integer id,Usuario usuario) {
+    public UsuarioDTO updateUsuario(Integer id,UsuarioDTO usuario) {
         Usuario existente =  findById(id);
-
         existente.setNombreUsuario(usuario.getNombreUsuario());
         existente.setPassword(usuario.getPassword());
-        return repo.save(existente);
+        repo.save(existente);
+        return usuario;
     }
 
     @Transactional
-    public Usuario deleteUsuario(Integer id) {
+    public UsuarioDTO deleteUsuario(Integer id) {
         Usuario existente = findById(id);
-        Usuario mostrar = new Usuario();
+        UsuarioDTO mostrar = new UsuarioDTO();
         BeanUtils.copyProperties(existente, mostrar);
         repo.delete(existente);
         return mostrar;

@@ -2,6 +2,7 @@ package com.example.forest_access.api.controllers;
 
 import com.example.forest_access.biz.dao.entities.HistoricoTratamiento;
 import com.example.forest_access.biz.dao.services.HistoricoTratamientoService;
+import com.example.forest_access.dto.HistoricoTratamientoDTO;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,21 +20,21 @@ public class HistoricoTratamientoController {
     }
 
     @GetMapping("/all")
-    public ResponseEntity<List<HistoricoTratamiento>> getAll() {
+    public ResponseEntity<List<HistoricoTratamientoDTO>> getAll() {
         return ResponseEntity.ok(service.findAll());
     }
 
     @PostMapping("/create")
-    public ResponseEntity<HistoricoTratamiento> create(@RequestBody HistoricoTratamiento historico) {
+    public ResponseEntity<HistoricoTratamientoDTO> create(@RequestBody HistoricoTratamientoDTO historico) {
         HistoricoTratamiento nuevo = service.create(historico);
         URI location = URI.create("/forest_access/api/historico_tratamientos/" + nuevo.getIdHistorico());
-        return ResponseEntity.created(location).body(nuevo);
+        return ResponseEntity.created(location).body(historico);
     }
 
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Integer id) {
-        service.delete(id);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<HistoricoTratamientoDTO> delete(@PathVariable Integer id) {
+        HistoricoTratamientoDTO htdto = service.delete(id);
+        return ResponseEntity.ok(htdto);
     }
 
 }

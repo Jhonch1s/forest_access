@@ -2,6 +2,7 @@ package com.example.forest_access.api.controllers;
 
 import com.example.forest_access.biz.dao.entities.Producto;
 import com.example.forest_access.biz.dao.services.ProductoService;
+import com.example.forest_access.dto.ProductoDTO;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,31 +19,31 @@ public class ProductoController {
     }
 
     @GetMapping("/all")
-    public ResponseEntity<List<Producto>> getAllProductos() {
-        List<Producto> productos = productoService.findAll();
+    public ResponseEntity<List<ProductoDTO>> getAllProductos() {
+        List<ProductoDTO> productos = productoService.findAll();
         return ResponseEntity.ok(productos);
     }
 
     @PostMapping("/create")
-    public ResponseEntity<Producto> createProducto(@RequestBody Producto producto) {
+    public ResponseEntity<ProductoDTO> createProducto(@RequestBody ProductoDTO producto) {
         Producto nuevoProducto = productoService.create(producto);
         URI location = URI.create("/forest_access/api/productos/" + nuevoProducto.getIdProducto());
-        return ResponseEntity.created(location).body(nuevoProducto);
+        return ResponseEntity.created(location).body(producto);
 
     }
 
     @PutMapping("/update/{id}")
-    public ResponseEntity<Producto> updateProducto(
+    public ResponseEntity<ProductoDTO> updateProducto(
             @PathVariable Integer id,
-            @RequestBody Producto producto) {
-        Producto productoActualizado = productoService.update(id, producto);
+            @RequestBody ProductoDTO producto) {
+        ProductoDTO productoActualizado = productoService.update(id, producto);
         return ResponseEntity.ok(productoActualizado);
     }
 
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<Void> deleteProducto(@PathVariable Integer id) {
-        productoService.delete(id);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<ProductoDTO> deleteProducto(@PathVariable Integer id) {
+        ProductoDTO p= productoService.delete(id);
+        return ResponseEntity.ok(p);
     }
 
 }

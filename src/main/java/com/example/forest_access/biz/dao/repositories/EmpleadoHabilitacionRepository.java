@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 public interface EmpleadoHabilitacionRepository
         extends JpaRepository<EmpleadoHabilitacion, EmpleadoHabilitacionId> {
@@ -19,4 +20,6 @@ public interface EmpleadoHabilitacionRepository
     // útil para alertas de vencimiento
     List<EmpleadoHabilitacion> findByFechaVencimientoBefore(LocalDate fecha);
     List<EmpleadoHabilitacion> findByFechaVencimientoBetween(LocalDate desde, LocalDate hasta);
+
+    Optional<EmpleadoHabilitacion> findById(EmpleadoHabilitacionId id);
 }
