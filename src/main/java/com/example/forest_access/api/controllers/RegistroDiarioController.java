@@ -13,7 +13,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @RestController
-@RequestMapping("/forest_access/api/registros-diarios")
+@RequestMapping("/api/registros-diarios")
 @AllArgsConstructor
 public class RegistroDiarioController {
 

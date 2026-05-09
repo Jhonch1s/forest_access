@@ -21,7 +21,7 @@ public class SwaggerConfig {
     public GroupedOpenApi api() {
         return GroupedOpenApi.builder()
                 .group("Forest Access")
-                .pathsToMatch("/forest_access/api/**")
+                .pathsToMatch("/api/**")
                 .build();
     }
 }
