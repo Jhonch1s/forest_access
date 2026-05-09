@@ -2,7 +2,9 @@ package com.example.forest_access.biz.dao.services;
 
 import com.example.forest_access.biz.dao.entities.Producto;
 import com.example.forest_access.biz.dao.repositories.ProductoRepository;
+import com.example.forest_access.dto.ProductoDTO;
 import lombok.AllArgsConstructor;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,17 +16,25 @@ public class ProductoService {
 
     private ProductoRepository productoRepository;
 
-    public List<Producto> findAll() {
-        return productoRepository.findAll();
+    public List<ProductoDTO> findAll() {
+
+        return productoRepository.findAll().stream().map(p ->{
+            ProductoDTO producto = new ProductoDTO();
+            BeanUtils.copyProperties(p, producto);
+            return producto;
+        }).toList();
     }
 
     @Transactional
-    public Producto create(Producto producto) {
-        return productoRepository.save(producto);
+    public Producto create(ProductoDTO producto) {
+        Producto p = new Producto();
+        BeanUtils.copyProperties(producto, p);
+        productoRepository.save(p);
+        return p;
     }
 
     @Transactional
-    public Producto update(Integer idProducto, Producto productoActualizado) {
+    public ProductoDTO update(Integer idProducto, ProductoDTO productoActualizado) {
         Producto productoExistente = productoRepository.findById(idProducto)
                 .orElseThrow(() -> new RuntimeException("Producto no encontrado con id: " + idProducto));
 
@@ -33,15 +43,18 @@ public class ProductoService {
         productoExistente.setConcentracion(productoActualizado.getConcentracion());
         productoExistente.setUnidadBase(productoActualizado.getUnidadBase());
 
-        return productoRepository.save(productoExistente);
+        productoRepository.save(productoExistente);
+        return productoActualizado;
     }
 
     @Transactional
-    public void delete(Integer idProducto) {
-        if (!productoRepository.existsById(idProducto)) {
-            throw new RuntimeException("Producto no encontrado con id: " + idProducto);
-        }
-        productoRepository.deleteById(idProducto);
+    public ProductoDTO delete(Integer idProducto) {
+        Producto producto = productoRepository.findById(idProducto)
+                        .orElseThrow(()-> new RuntimeException("No existe el producto"));
+        ProductoDTO p  = new ProductoDTO();
+        BeanUtils.copyProperties(producto, p);
+        productoRepository.delete(producto);
+        return p;
     }
 
 

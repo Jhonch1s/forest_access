@@ -8,6 +8,7 @@ import com.example.forest_access.biz.dao.repositories.CuadrillaRepository;
 import com.example.forest_access.biz.dao.repositories.HistoricoTratamientoRepository;
 import com.example.forest_access.biz.dao.repositories.ParcelaRepository;
 import com.example.forest_access.biz.dao.repositories.TratamientoRepository;
+import com.example.forest_access.dto.HistoricoTratamientoDTO;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,36 +24,60 @@ public class HistoricoTratamientoService {
     private final TratamientoRepository tratamientoRepository;
     private final CuadrillaRepository cuadrillaRepository;
 
-    public List<HistoricoTratamiento> findAll() {
-        return historyRepo.findAll();
+    public List<HistoricoTratamientoDTO> findAll() {
+
+        return historyRepo.findAll().stream().map(ht ->{
+            HistoricoTratamientoDTO htdto = new HistoricoTratamientoDTO();
+            htdto.setIdParcela(ht.getParcela().getIdParcela());
+            htdto.setIdTratamiento(ht.getTratamiento().getIdTratamiento());
+            htdto.setCuadrilla(ht.getCuadrilla().getIdCuadrilla());
+            htdto.setFechaInicio(ht.getFechaInicio());
+            htdto.setFechaFin(ht.getFechaFin());
+            htdto.setObservaciones(ht.getObservaciones());
+            return htdto;
+        }).toList();
     }
 
     @Transactional
-    public HistoricoTratamiento create(HistoricoTratamiento historico) {
-        Parcela parcela = parcelaRepository.findById(historico.getParcela().getIdParcela())
+    public HistoricoTratamiento create(HistoricoTratamientoDTO historico) {
+        Parcela parcela = parcelaRepository.findById(historico.getIdParcela())
                 .orElseThrow(() -> new RuntimeException("Parcela no encontrada con id: " +
-                        historico.getParcela().getIdParcela()));
-        Tratamiento tratamiento = tratamientoRepository.findById(historico.getTratamiento().getIdTratamiento())
+                        historico.getIdParcela()));
+        Tratamiento tratamiento = tratamientoRepository.findById(historico.getIdTratamiento())
                 .orElseThrow(() -> new RuntimeException("Tratamiento no encontrado con id: " +
-                        historico.getTratamiento().getIdTratamiento()));
-        Cuadrilla cuadrilla = cuadrillaRepository.findById(historico.getCuadrilla().getIdCuadrilla())
+                        historico.getIdTratamiento()));
+        Cuadrilla cuadrilla = cuadrillaRepository.findById(historico.getCuadrilla())
                 .orElseThrow(() -> new RuntimeException("Cuadrilla no encontrada con id: " +
-                        historico.getCuadrilla().getIdCuadrilla()));
+                        historico.getCuadrilla()));
 
-        historico.setParcela(parcela);
-        historico.setTratamiento(tratamiento);
-        historico.setCuadrilla(cuadrilla);
+        HistoricoTratamiento ht = new HistoricoTratamiento();
+        ht.setParcela(parcela);
+        ht.setTratamiento(tratamiento);
+        ht.setCuadrilla(cuadrilla);
+        ht.setFechaInicio(historico.getFechaInicio());
+        ht.setFechaFin(historico.getFechaFin());
+        ht.setObservaciones(historico.getObservaciones());
 
-        return historyRepo.save(historico);
+        return historyRepo.save(ht);
     }
 
 
     @Transactional
-    public void delete(Integer idHistorico) {
+    public HistoricoTratamientoDTO delete(Integer idHistorico) {
         if (!historyRepo.existsById(idHistorico)) {
             throw new RuntimeException("HistoricoTratamiento no encontrado con id: " + idHistorico);
         }
+        HistoricoTratamiento ht = historyRepo.findById(idHistorico)
+                        .orElseThrow(()->new RuntimeException("HistoricoTratamiento no encontrado con id: " + idHistorico));
+        HistoricoTratamientoDTO htdto = new HistoricoTratamientoDTO();
+        htdto.setIdParcela(ht.getParcela().getIdParcela());
+        htdto.setIdTratamiento(ht.getTratamiento().getIdTratamiento());
+        htdto.setCuadrilla(ht.getCuadrilla().getIdCuadrilla());
+        htdto.setFechaInicio(ht.getFechaInicio());
+        htdto.setFechaFin(ht.getFechaFin());
+        htdto.setObservaciones(ht.getObservaciones());
         historyRepo.deleteById(idHistorico);
+        return htdto;
     }
 
 }

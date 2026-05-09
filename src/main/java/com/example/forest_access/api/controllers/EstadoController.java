@@ -5,6 +5,7 @@ import com.example.forest_access.biz.dao.entities.Empleado;
 import com.example.forest_access.biz.dao.entities.Estado;
 import com.example.forest_access.biz.dao.repositories.EstadoRepository;
 import com.example.forest_access.biz.dao.services.EstadoService;
+import com.example.forest_access.dto.EstadoDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,7 +25,7 @@ public class EstadoController {
     }
 
     @GetMapping("/all")
-    public ResponseEntity<List<Estado>> conseguirEstados() {
+    public ResponseEntity<List<EstadoDTO>> conseguirEstados() {
         return ResponseEntity.ok(estadoservice.MostrarEstados());
     }
 
