@@ -1,7 +1,9 @@
 package com.example.forest_access.api.controllers;
 
-import com.example.forest_access.biz.dao.entities.Cuadrilla;
+import com.example.forest_access.api.controllers.request.CuadrillaRequest;
+import com.example.forest_access.api.controllers.response.CuadrillaResponse;
 import com.example.forest_access.biz.dao.services.CuadrillaService;
+import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -9,42 +11,38 @@ import java.net.URI;
 import java.util.List;
 
 @RestController
-@RequestMapping("/forest_access/api/cuadrillas")
+@RequestMapping("/api/cuadrillas")
+@AllArgsConstructor
 public class CuadrillaController {
 
     private final CuadrillaService service;
 
-    public CuadrillaController(CuadrillaService service) {
-        this.service = service;
-    }
-
     @GetMapping
-    public ResponseEntity<List<Cuadrilla>> findAll() {
+    public ResponseEntity<List<CuadrillaResponse>> findAll() {
         return ResponseEntity.ok(service.findAll());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Cuadrilla> findById(@PathVariable Integer id) {
+    public ResponseEntity<CuadrillaResponse> findById(@PathVariable Integer id) {
         return ResponseEntity.ok(service.findById(id));
     }
 
     @GetMapping("/activas")
-    public ResponseEntity<List<Cuadrilla>> findActivas() {
+    public ResponseEntity<List<CuadrillaResponse>> findActivas() {
         return ResponseEntity.ok(service.findActivas());
     }
 
     @PostMapping("/create")
-    public ResponseEntity<Cuadrilla> create(@RequestBody Cuadrilla cuadrilla) {
-        Cuadrilla creada = service.create(cuadrilla);
-        URI location = URI.create("/forest_access/api/cuadrillas/" + creada.getIdCuadrilla());
-        return ResponseEntity.created(location).body(creada);
+    public ResponseEntity<CuadrillaResponse> create(@RequestBody CuadrillaRequest request) {
+        CuadrillaResponse creada = service.create(request);
+        return ResponseEntity.created(URI.create("/api/cuadrillas/" + creada.getIdCuadrilla())).body(creada);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Cuadrilla> update(
+    public ResponseEntity<CuadrillaResponse> update(
             @PathVariable Integer id,
-            @RequestBody Cuadrilla datos) {
-        return ResponseEntity.ok(service.update(id, datos));
+            @RequestBody CuadrillaRequest request) {
+        return ResponseEntity.ok(service.update(id, request));
     }
 
     @DeleteMapping("/{id}")

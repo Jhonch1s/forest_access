@@ -9,7 +9,7 @@ import java.net.URI;
 import java.util.List;
 
 @RestController
-@RequestMapping("/forest_access/api/productos")
+@RequestMapping("/api/productos")
 public class ProductoController {
     private ProductoService productoService;
 

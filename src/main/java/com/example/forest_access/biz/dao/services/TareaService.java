@@ -1,10 +1,9 @@
 package com.example.forest_access.biz.dao.services;
 
-import com.example.forest_access.biz.dao.entities.Empleado;
-import com.example.forest_access.biz.dao.entities.Estado;
-import com.example.forest_access.biz.dao.entities.HistoricoTratamiento;
-import com.example.forest_access.biz.dao.entities.Tarea;
-import com.example.forest_access.biz.dao.repositories.TareaRepository;
+import com.example.forest_access.api.controllers.request.TareaRequest;
+import com.example.forest_access.api.controllers.response.TareaResponse;
+import com.example.forest_access.biz.dao.entities.*;
+import com.example.forest_access.biz.dao.repositories.*;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -12,90 +11,108 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
 public class TareaService {
 
     private final TareaRepository repository;
+    private final EmpleadoRepository empleadoRepository;
+    private final EstadoRepository estadoRepository;
+    private final CatalogoTareaRepository catalogoRepository;
+    private final PlantillaTareaRepository plantillaRepository;
+    private final HistoricoTratamientoRepository historicoRepository;
 
     @Transactional(readOnly = true)
-    public List<Tarea> findAll() {
-        return repository.findAll();
+    public List<TareaResponse> findAll() {
+        return repository.findAll().stream().map(this::mapToResponse).collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
-    public Tarea findById(Integer id) {
-        return repository.findById(id)
+    public TareaResponse findById(Integer id) {
+        Tarea tarea = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Tarea no encontrada con ID: " + id));
+        return mapToResponse(tarea);
     }
 
     @Transactional
-    public Tarea create(Tarea tarea) {
-        // Aseguramos fecha de creación si no viene
-        if (tarea.getFechaCreacion() == null) {
-            tarea.setFechaCreacion(LocalDate.now());
-        }
-        return repository.save(tarea);
+    public TareaResponse create(TareaRequest request) {
+        Tarea nueva = new Tarea();
+        nueva.setFechaCreacion(LocalDate.now());
+        updateEntityFromRequest(nueva, request);
+        return mapToResponse(repository.save(nueva));
     }
 
     @Transactional
-    public Tarea update(Integer id, Tarea datos) {
-        Tarea existente = findById(id);
-
-        // Actualización de relaciones
-        existente.setCatalogoTarea(datos.getCatalogoTarea());
-        existente.setEstado(datos.getEstado());
-        existente.setEmpleado(datos.getEmpleado());
-        existente.setHistoricoTratamiento(datos.getHistoricoTratamiento());
-        existente.setPlantilla(datos.getPlantilla());
-
-        // Actualización de fechas y datos operativos
-        existente.setFechaInicio(datos.getFechaInicio());
-        existente.setFechaFinEstimada(datos.getFechaFinEstimada());
-        existente.setFechaFinalizacion(datos.getFechaFinalizacion());
-        existente.setHoras(datos.getHoras());
-        existente.setDescripcion(datos.getDescripcion());
-        existente.setObservaciones(datos.getObservaciones());
-
-        return repository.save(existente);
+    public TareaResponse update(Integer id, TareaRequest request) {
+        Tarea existente = repository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Tarea no encontrada"));
+        updateEntityFromRequest(existente, request);
+        return mapToResponse(repository.save(existente));
     }
 
     @Transactional
     public void delete(Integer id) {
-        Tarea existente = findById(id);
-        repository.delete(existente);
+        if (!repository.existsById(id)) throw new EntityNotFoundException("No existe");
+        repository.deleteById(id);
     }
 
+    // --- Métodos de búsqueda especializados ---
 
     @Transactional(readOnly = true)
-    public List<Tarea> findPorEmpleado(Integer idEmpleado) {
-        return repository.findByEmpleado_IdEmpleado(idEmpleado);
-    }
-
-    @Transactional(readOnly = true)
-    public List<Tarea> findPorEstado(String nombreEstado) {
-        return repository.findByEstado_Nombre(nombreEstado);
+    public List<TareaResponse> findPorEmpleado(Integer idEmpleado) {
+        return repository.findByEmpleado_IdEmpleado(idEmpleado).stream()
+                .map(this::mapToResponse).collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
-    public List<Tarea> findPendientesDeEmpleado(Empleado empleado) {
-        // Filtra tareas que no están terminadas ("PENDIENTE", "EN_CURSO")
-        return repository.findByEmpleadoAndEstado_NombreIn(empleado, List.of("PENDIENTE", "EN_CURSO"));
+    public List<TareaResponse> findParaLiquidacion(Integer idEmpleado, LocalDate inicio, LocalDate fin) {
+        Empleado e = empleadoRepository.findById(idEmpleado)
+                .orElseThrow(() -> new EntityNotFoundException("Empleado no encontrado"));
+        return repository.findByEmpleadoAndFechaFinalizacionBetween(e, inicio, fin).stream()
+                .map(this::mapToResponse).collect(Collectors.toList());
     }
 
-    @Transactional(readOnly = true)
-    public List<Tarea> findPorHistorico(Integer idHistorico) {
-        return repository.findByHistoricoTratamiento_IdHistorico(idHistorico);
+    // --- MAPPERS (Traducción) ---
+
+    private void updateEntityFromRequest(Tarea entidad, TareaRequest request) {
+        entidad.setDescripcion(request.getDescripcion());
+        entidad.setObservaciones(request.getObservaciones());
+        entidad.setHoras(request.getHoras());
+        entidad.setFechaInicio(request.getFechaInicio());
+        entidad.setFechaFinEstimada(request.getFechaFinEstimada());
+        entidad.setFechaFinalizacion(request.getFechaFinalizacion());
+
+        // Resolución de Relaciones por ID
+        if (request.getIdEmpleado() != null)
+            entidad.setEmpleado(empleadoRepository.findById(request.getIdEmpleado()).orElse(null));
+
+        if (request.getIdEstado() != null)
+            entidad.setEstado(estadoRepository.findById(request.getIdEstado()).orElse(null));
+
+        if (request.getIdCatalogoTarea() != null)
+            entidad.setCatalogoTarea(catalogoRepository.findById(request.getIdCatalogoTarea()).orElse(null));
+
+        if (request.getIdPlantilla() != null)
+            entidad.setPlantilla(plantillaRepository.findById(request.getIdPlantilla()).orElse(null));
+
+        if (request.getIdHistoricoTratamiento() != null)
+            entidad.setHistoricoTratamiento(historicoRepository.findById(request.getIdHistoricoTratamiento()).orElse(null));
     }
 
-    @Transactional(readOnly = true)
-    public List<Tarea> findParaLiquidacion(Empleado empleado, LocalDate inicio, LocalDate fin) {
-        return repository.findByEmpleadoAndFechaFinalizacionBetween(empleado, inicio, fin);
-    }
+    private TareaResponse mapToResponse(Tarea t) {
+        TareaResponse res = new TareaResponse();
+        res.setIdTarea(t.getIdTarea());
+        res.setDescripcion(t.getDescripcion());
+        res.setHoras(t.getHoras());
+        res.setFechaFinalizacion(t.getFechaFinalizacion());
 
-    @Transactional(readOnly = true)
-    public List<Tarea> findPorParcela(Integer idParcela) {
-        return repository.findByHistoricoTratamiento_Parcela_IdParcela(idParcela);
+        // Nombres legibles para el Frontend
+        if (t.getEmpleado() != null) res.setNombreEmpleado(t.getEmpleado().getNombre());
+        if (t.getEstado() != null) res.setNombreEstado(t.getEstado().getNombre());
+        if (t.getCatalogoTarea() != null) res.setNombreTareaCatalogo(t.getCatalogoTarea().getNombre());
+
+        return res;
     }
 }

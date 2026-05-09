@@ -9,7 +9,7 @@ import java.net.URI;
 import java.util.List;
 
 @RestController
-@RequestMapping("/forest_access/api/categorias-empleado")
+@RequestMapping("/api/categorias-empleado")
 public class CategoriaEmpleadoController {
 
     private final CategoriaEmpleadoService service;

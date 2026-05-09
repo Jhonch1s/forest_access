@@ -1,7 +1,9 @@
 package com.example.forest_access.api.controllers;
 
-import com.example.forest_access.biz.dao.entities.PlantillaTarea;
+import com.example.forest_access.api.controllers.request.PlantillaTareaRequest;
+import com.example.forest_access.api.controllers.response.PlantillaTareaResponse;
 import com.example.forest_access.biz.dao.services.PlantillaTareaService;
+import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -9,37 +11,34 @@ import java.net.URI;
 import java.util.List;
 
 @RestController
-@RequestMapping("/forest_access/api/plantillas-tarea")
+@RequestMapping("/api/plantillas-tarea")
+@AllArgsConstructor
 public class PlantillaTareaController {
 
     private final PlantillaTareaService service;
 
-    public PlantillaTareaController(PlantillaTareaService service) {
-        this.service = service;
-    }
-
     @GetMapping
-    public ResponseEntity<List<PlantillaTarea>> findAll() {
+    public ResponseEntity<List<PlantillaTareaResponse>> findAll() {
         return ResponseEntity.ok(service.findAll());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<PlantillaTarea> findById(@PathVariable Integer id) {
+    public ResponseEntity<PlantillaTareaResponse> findById(@PathVariable Integer id) {
         return ResponseEntity.ok(service.findById(id));
     }
 
     @PostMapping("/create")
-    public ResponseEntity<PlantillaTarea> create(@RequestBody PlantillaTarea plantilla) {
-        PlantillaTarea creada = service.create(plantilla);
+    public ResponseEntity<PlantillaTareaResponse> create(@RequestBody PlantillaTareaRequest request) {
+        PlantillaTareaResponse creada = service.create(request);
         URI location = URI.create("/forest_access/api/plantillas-tarea/" + creada.getIdPlantilla());
         return ResponseEntity.created(location).body(creada);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<PlantillaTarea> update(
+    public ResponseEntity<PlantillaTareaResponse> update(
             @PathVariable Integer id,
-            @RequestBody PlantillaTarea datos) {
-        return ResponseEntity.ok(service.update(id, datos));
+            @RequestBody PlantillaTareaRequest request) {
+        return ResponseEntity.ok(service.update(id, request));
     }
 
     @DeleteMapping("/{id}")
@@ -49,7 +48,7 @@ public class PlantillaTareaController {
     }
 
     @GetMapping("/catalogo/{idCatalogo}")
-    public ResponseEntity<List<PlantillaTarea>> findByCatalogo(@PathVariable Integer idCatalogo) {
+    public ResponseEntity<List<PlantillaTareaResponse>> findByCatalogo(@PathVariable Integer idCatalogo) {
         return ResponseEntity.ok(service.findByCatalogo(idCatalogo));
     }
 }

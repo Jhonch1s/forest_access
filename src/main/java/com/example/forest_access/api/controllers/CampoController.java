@@ -9,7 +9,7 @@ import java.net.URI;
 import java.util.List;
 
 @RestController
-@RequestMapping("/forest_access/api/campos")
+@RequestMapping("/api/campos")
 public class CampoController {
 
 

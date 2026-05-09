@@ -1,13 +1,16 @@
 package com.example.forest_access.biz.dao.services;
 
+import com.example.forest_access.api.controllers.request.CuadrillaRequest;
+import com.example.forest_access.api.controllers.response.CuadrillaResponse;
 import com.example.forest_access.biz.dao.entities.Cuadrilla;
 import com.example.forest_access.biz.dao.repositories.CuadrillaRepository;
 import jakarta.persistence.EntityNotFoundException;
-import org.springframework.transaction.annotation.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -15,57 +18,69 @@ public class CuadrillaService {
 
     private final CuadrillaRepository repository;
 
-    public List<Cuadrilla> findAll(){
-        return repository.findAll();
+    @Transactional(readOnly = true)
+    public List<CuadrillaResponse> findAll() {
+        return repository.findAll().stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
     }
 
-    public Cuadrilla findById(Integer id){
-        return repository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException(
-                        "Cuadrilla no encontrada con Id: " + id
-                ));
+    @Transactional(readOnly = true)
+    public CuadrillaResponse findById(Integer id) {
+        Cuadrilla cuadrilla = repository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Cuadrilla no encontrada con Id: " + id));
+        return mapToResponse(cuadrilla);
     }
 
-    public List<Cuadrilla> findActivas() {
-        return repository.findByActiva(true);
+    @Transactional(readOnly = true)
+    public List<CuadrillaResponse> findActivas() {
+        return repository.findByActiva(true).stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
     }
 
     @Transactional
-    public Cuadrilla create(Cuadrilla cuadrilla){
-        if (repository.findByNombre(cuadrilla.getNombre()).isPresent()) {
-            throw new IllegalArgumentException(
-                    "Ya existe una cuadrilla con el nombre: " + cuadrilla.getNombre()
-            );
+    public CuadrillaResponse create(CuadrillaRequest request) {
+        if (repository.findByNombre(request.getNombre()).isPresent()) {
+            throw new IllegalArgumentException("Ya existe una cuadrilla con el nombre: " + request.getNombre());
         }
-        return repository.save(cuadrilla);
+
+        Cuadrilla nueva = new Cuadrilla();
+        nueva.setNombre(request.getNombre());
+        nueva.setActiva(request.getActiva() != null ? request.getActiva() : true);
+
+        return mapToResponse(repository.save(nueva));
     }
 
-
     @Transactional
-    public Cuadrilla update(Integer id, Cuadrilla datos) {
-        Cuadrilla existente = findById(id);
+    public CuadrillaResponse update(Integer id, CuadrillaRequest request) {
+        Cuadrilla existente = repository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("No existe la cuadrilla"));
 
-        // Validar duplicado solo si el nombre cambió
-        if (!existente.getNombre().equalsIgnoreCase(datos.getNombre())) {
-            if (repository.findByNombre(datos.getNombre()).isPresent()) {
-                throw new IllegalArgumentException(
-                        "Error: El nombre '" + datos.getNombre() + "' ya está en uso por otra cuadrilla."
-                );
+        if (!existente.getNombre().equalsIgnoreCase(request.getNombre())) {
+            if (repository.findByNombre(request.getNombre()).isPresent()) {
+                throw new IllegalArgumentException("El nombre '" + request.getNombre() + "' ya está en uso.");
             }
         }
 
-        // Actualizamos los campos el modelo
-        existente.setNombre(datos.getNombre());
-        existente.setActiva(datos.getActiva());
+        existente.setNombre(request.getNombre());
+        existente.setActiva(request.getActiva());
 
-        // Al usar @Transactional y haber buscado la entidad primero,
-        // save() realizará un UPDATE correcto sin conflictos de concurrencia.
-        return repository.save(existente);
+        return mapToResponse(repository.save(existente));
     }
 
     @Transactional
     public void delete(Integer id) {
-        Cuadrilla existente = findById(id);
-        repository.delete(existente);
+        if (!repository.existsById(id)) throw new EntityNotFoundException("No encontrado");
+        repository.deleteById(id);
+    }
+
+    // Mapper para el Response
+    private CuadrillaResponse mapToResponse(Cuadrilla entidad) {
+        CuadrillaResponse res = new CuadrillaResponse();
+        res.setIdCuadrilla(entidad.getIdCuadrilla());
+        res.setNombre(entidad.getNombre());
+        res.setActiva(entidad.getActiva());
+        return res;
     }
 }

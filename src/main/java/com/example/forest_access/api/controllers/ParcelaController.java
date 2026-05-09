@@ -10,7 +10,7 @@ import java.net.URI;
 import java.util.List;
 
 @RestController
-@RequestMapping("/forest_access/api/parcelas")
+@RequestMapping("/api/parcelas")
 public class ParcelaController {
 
     private ParcelaService parcelaservice;

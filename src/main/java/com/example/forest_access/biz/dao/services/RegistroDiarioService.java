@@ -1,7 +1,10 @@
 package com.example.forest_access.biz.dao.services;
 
+import com.example.forest_access.api.controllers.request.RegistroDiarioRequest;
+import com.example.forest_access.api.controllers.response.RegistroDiarioResponse;
 import com.example.forest_access.biz.dao.entities.Empleado;
 import com.example.forest_access.biz.dao.entities.RegistroDiario;
+import com.example.forest_access.biz.dao.repositories.EmpleadoRepository;
 import com.example.forest_access.biz.dao.repositories.RegistroDiarioRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
@@ -10,76 +13,99 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
 public class RegistroDiarioService {
 
     private final RegistroDiarioRepository repository;
+    private final EmpleadoRepository empleadoRepository;
 
     @Transactional(readOnly = true)
-    public List<RegistroDiario> findAll() {
-        return repository.findAll();
+    public List<RegistroDiarioResponse> findAll() {
+        return repository.findAll().stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
-    public RegistroDiario findById(Integer id) {
-        return repository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Registro diario no encontrado con ID: " + id));
+    public RegistroDiarioResponse findById(Integer id) {
+        RegistroDiario registro = repository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Registro no encontrado con ID: " + id));
+        return mapToResponse(registro);
     }
 
     @Transactional
-    public RegistroDiario create(RegistroDiario registro) {
-        // Validación: Un empleado solo puede tener un registro por día
-        if (repository.existsByEmpleadoAndFecha(registro.getEmpleado(), registro.getFecha())) {
+    public RegistroDiarioResponse create(RegistroDiarioRequest request) {
+        Empleado empleado = empleadoRepository.findById(request.getIdEmpleado())
+                .orElseThrow(() -> new EntityNotFoundException("Empleado no encontrado"));
+
+        if (repository.existsByEmpleadoAndFecha(empleado, request.getFecha())) {
             throw new IllegalArgumentException(
                     String.format("El empleado %s ya tiene un registro para la fecha %s",
-                            registro.getEmpleado().getNombre(), registro.getFecha())
+                            empleado.getNombre(), request.getFecha())
             );
         }
-        return repository.save(registro);
+
+        RegistroDiario nuevo = new RegistroDiario();
+        updateEntityFromRequest(nuevo, request, empleado);
+
+        return mapToResponse(repository.save(nuevo));
     }
 
     @Transactional
-    public RegistroDiario update(Integer id, RegistroDiario datos) {
-        RegistroDiario existente = findById(id);
+    public RegistroDiarioResponse update(Integer id, RegistroDiarioRequest request) {
+        RegistroDiario existente = repository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Registro no encontrado"));
 
-        // Validar duplicado si se intenta cambiar la fecha o el empleado
-        if (!existente.getFecha().equals(datos.getFecha()) ||
-                !existente.getEmpleado().getIdEmpleado().equals(datos.getEmpleado().getIdEmpleado())) {
+        Empleado empleado = empleadoRepository.findById(request.getIdEmpleado())
+                .orElseThrow(() -> new EntityNotFoundException("Empleado no encontrado"));
 
-            if (repository.existsByEmpleadoAndFecha(datos.getEmpleado(), datos.getFecha())) {
-                throw new IllegalArgumentException("Ya existe un registro para ese empleado en la nueva fecha seleccionada.");
+        // Validar duplicado si cambia fecha o empleado
+        if (!existente.getFecha().equals(request.getFecha()) ||
+                !existente.getEmpleado().getIdEmpleado().equals(request.getIdEmpleado())) {
+            if (repository.existsByEmpleadoAndFecha(empleado, request.getFecha())) {
+                throw new IllegalArgumentException("Ya existe un registro para ese empleado en esa fecha.");
             }
         }
 
-        existente.setFecha(datos.getFecha());
-        existente.setEmpleado(datos.getEmpleado());
-        existente.setJornales(datos.getJornales());
-        existente.setAdelanto(datos.getAdelanto());
-        existente.setObservaciones(datos.getObservaciones());
-
-        return repository.save(existente);
+        updateEntityFromRequest(existente, request, empleado);
+        return mapToResponse(repository.save(existente));
     }
 
     @Transactional
     public void delete(Integer id) {
-        RegistroDiario existente = findById(id);
-        repository.delete(existente);
+        if (!repository.existsById(id)) throw new EntityNotFoundException("No encontrado");
+        repository.deleteById(id);
     }
 
     @Transactional(readOnly = true)
-    public List<RegistroDiario> findByFecha(LocalDate fecha) {
-        return repository.findByFecha(fecha);
+    public List<RegistroDiarioResponse> findPorIdEmpleado(Integer idEmpleado) {
+        return repository.findByEmpleado_IdEmpleado(idEmpleado).stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
     }
 
-    @Transactional(readOnly = true)
-    public List<RegistroDiario> findPorEmpleadoYPeriodo(Empleado empleado, LocalDate inicio, LocalDate fin) {
-        return repository.findByEmpleadoAndFechaBetween(empleado, inicio, fin);
+    // --- MAPPERS ---
+
+    private void updateEntityFromRequest(RegistroDiario entidad, RegistroDiarioRequest request, Empleado empleado) {
+        entidad.setFecha(request.getFecha());
+        entidad.setEmpleado(empleado);
+        entidad.setJornales(request.getJornales());
+        entidad.setAdelanto(request.getAdelanto());
+        entidad.setObservaciones(request.getObservaciones());
     }
 
-    @Transactional(readOnly = true)
-    public List<RegistroDiario> findPorIdEmpleado(Integer idEmpleado) {
-        return repository.findByEmpleado_IdEmpleado(idEmpleado);
+    private RegistroDiarioResponse mapToResponse(RegistroDiario entidad) {
+        RegistroDiarioResponse res = new RegistroDiarioResponse();
+        res.setIdRegistro(entidad.getIdRegistro());
+        res.setFecha(entidad.getFecha());
+        res.setIdEmpleado(entidad.getEmpleado().getIdEmpleado());
+        res.setNombreEmpleado(entidad.getEmpleado().getNombre());
+        res.setJornales(entidad.getJornales());
+        res.setAdelanto(entidad.getAdelanto());
+        res.setObservaciones(entidad.getObservaciones());
+        return res;
     }
 }

@@ -11,7 +11,7 @@ import java.net.URI;
 import java.util.List;
 
 @RestController
-@RequestMapping("/forest_access/api/habilitaciones")
+@RequestMapping("/api/habilitaciones")
 public class HabilitacionController {
 
     private HabilitacionService service;

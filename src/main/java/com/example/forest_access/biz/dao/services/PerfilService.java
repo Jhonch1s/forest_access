@@ -1,5 +1,7 @@
 package com.example.forest_access.biz.dao.services;
 
+import com.example.forest_access.api.controllers.request.PerfilRequest;
+import com.example.forest_access.api.controllers.response.PerfilResponse;
 import com.example.forest_access.biz.dao.entities.Perfil;
 import com.example.forest_access.biz.dao.repositories.PerfilRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -8,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -16,51 +19,68 @@ public class PerfilService {
     private final PerfilRepository repository;
 
     @Transactional(readOnly = true)
-    public List<Perfil> findAll() {
-        return repository.findAll();
+    public List<PerfilResponse> findAll() {
+        return repository.findAll().stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
-    public Perfil findById(Long id) {
-        return repository.findById(id)
+    public PerfilResponse findById(Long id) {
+        Perfil perfil = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Perfil no encontrado con id: " + id));
+        return mapToResponse(perfil);
     }
 
     @Transactional
-    public Perfil create(Perfil perfil) {
-        // Validar que el nombre del perfil no exista ya
-        if (repository.findByNombre(perfil.getNombre()).isPresent()) {
-            throw new IllegalArgumentException("El perfil con nombre '" + perfil.getNombre() + "' ya existe.");
+    public PerfilResponse create(PerfilRequest request) {
+        // Validar unicidad
+        if (repository.findByNombre(request.getNombre()).isPresent()) {
+            throw new IllegalArgumentException("El perfil con nombre '" + request.getNombre() + "' ya existe.");
         }
-        return repository.save(perfil);
+
+        Perfil nuevo = new Perfil();
+        nuevo.setNombre(request.getNombre());
+
+        return mapToResponse(repository.save(nuevo));
     }
 
     @Transactional
-    public Perfil update(Long id, Perfil datos) {
-        Perfil existente = findById(id);
+    public PerfilResponse update(Long id, PerfilRequest request) {
+        Perfil existente = repository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Perfil no encontrado"));
 
-        // Si el nombre cambió, validar que el nuevo nombre no esté en uso
-        if (!existente.getNombre().equalsIgnoreCase(datos.getNombre())) {
-            if (repository.findByNombre(datos.getNombre()).isPresent()) {
-                throw new IllegalArgumentException("No se puede actualizar: ya existe el perfil '" + datos.getNombre() + "'");
+        // Validar si el nombre cambió y si el nuevo ya existe
+        if (!existente.getNombre().equalsIgnoreCase(request.getNombre())) {
+            if (repository.findByNombre(request.getNombre()).isPresent()) {
+                throw new IllegalArgumentException("Ya existe el perfil '" + request.getNombre() + "'");
             }
         }
 
-        existente.setNombre(datos.getNombre());
-
-        return repository.save(existente);
+        existente.setNombre(request.getNombre());
+        return mapToResponse(repository.save(existente));
     }
 
     @Transactional
     public void delete(Long id) {
-        // Antes de borrar podriamos verificar si hay usuarios asociados para evitar errores de integridad
-        Perfil existente = findById(id);
-        repository.delete(existente);
+        if (!repository.existsById(id)) {
+            throw new EntityNotFoundException("No se puede eliminar: Perfil no encontrado");
+        }
+        repository.deleteById(id);
     }
 
-    @Transactional
-    public Perfil findByNombre(String nombre) {
-        return repository.findByNombre(nombre)
-                .orElseThrow(() -> new EntityNotFoundException("Perfil no encontrado con nombre: " + nombre));
+    @Transactional(readOnly = true)
+    public PerfilResponse findByNombre(String nombre) {
+        Perfil perfil = repository.findByNombre(nombre)
+                .orElseThrow(() -> new EntityNotFoundException("Perfil no encontrado: " + nombre));
+        return mapToResponse(perfil);
+    }
+
+    // Mapper privado: Entidad -> Response
+    private PerfilResponse mapToResponse(Perfil entidad) {
+        PerfilResponse res = new PerfilResponse();
+        res.setId(entidad.getId());
+        res.setNombre(entidad.getNombre());
+        return res;
     }
 }

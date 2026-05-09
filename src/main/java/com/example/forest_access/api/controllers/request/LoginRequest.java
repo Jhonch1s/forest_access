@@ -1,4 +1,4 @@
-package com.example.forest_access.dto;
+package com.example.forest_access.api.controllers.request;
 
 import lombok.Data;
 

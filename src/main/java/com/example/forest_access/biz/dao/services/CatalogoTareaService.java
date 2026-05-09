@@ -1,73 +1,98 @@
 package com.example.forest_access.biz.dao.services;
 
+import com.example.forest_access.api.controllers.request.CatalogoTareaRequest;
+import com.example.forest_access.api.controllers.response.CatalogoTareaResponse;
 import com.example.forest_access.biz.dao.entities.CatalogoTarea;
 import com.example.forest_access.biz.dao.entities.Habilitacion;
 import com.example.forest_access.biz.dao.repositories.CatalogoTareaRepository;
+import com.example.forest_access.biz.dao.repositories.HabilitacionRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
 public class CatalogoTareaService {
 
     private final CatalogoTareaRepository repository;
+    private final HabilitacionRepository habilitacionRepository;
 
-    public List<CatalogoTarea> findAll() {
-        return repository.findAll();
+    @Transactional(readOnly = true)
+    public List<CatalogoTareaResponse> findAll() {
+        return repository.findAll().stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
     }
 
-    public CatalogoTarea findById(Integer id) {
-        return repository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException(
-                        "Tarea no encontrada con ID: " + id
-                ));
+    @Transactional(readOnly = true)
+    public CatalogoTareaResponse findById(Integer id) {
+        CatalogoTarea tarea = repository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Tarea no encontrada con ID: " + id));
+        return mapToResponse(tarea);
     }
 
     @Transactional
-    public CatalogoTarea create(CatalogoTarea tarea) {
-
-        if (repository.findByNombre(tarea.getNombre()).isPresent()) {
-            throw new IllegalArgumentException(
-                    "Ya existe una tarea con el nombre: " + tarea.getNombre()
-            );
+    public CatalogoTareaResponse create(CatalogoTareaRequest request) {
+        if (repository.findByNombre(request.getNombre()).isPresent()) {
+            throw new IllegalArgumentException("Ya existe una tarea con el nombre: " + request.getNombre());
         }
-        return repository.save(tarea);
+
+        CatalogoTarea nueva = new CatalogoTarea();
+        updateEntityFromRequest(nueva, request);
+
+        return mapToResponse(repository.save(nueva));
     }
 
     @Transactional
-    public CatalogoTarea update(Integer id, CatalogoTarea datos) {
-        CatalogoTarea existente = findById(id);
+    public CatalogoTareaResponse update(Integer id, CatalogoTareaRequest request) {
+        CatalogoTarea existente = repository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("No existe la tarea"));
 
-        if (!existente.getNombre().equalsIgnoreCase(datos.getNombre())) {
-            if (repository.findByNombre(datos.getNombre()).isPresent()) {
-                throw new IllegalArgumentException(
-                        "Error: El nombre '" + datos.getNombre() + "' ya está en uso por otra tarea."
-                );
+        if (!existente.getNombre().equalsIgnoreCase(request.getNombre())) {
+            if (repository.findByNombre(request.getNombre()).isPresent()) {
+                throw new IllegalArgumentException("El nombre '" + request.getNombre() + "' ya está en uso.");
             }
         }
 
-        existente.setNombre(datos.getNombre());
-        existente.setDescripcion(datos.getDescripcion());
-        existente.setRequiereHabilitacion(datos.getRequiereHabilitacion());
-
-        return repository.save(existente);
+        updateEntityFromRequest(existente, request);
+        return mapToResponse(repository.save(existente));
     }
 
     @Transactional
     public void delete(Integer id) {
-        CatalogoTarea existente = findById(id);
-        repository.delete(existente);
+        if (!repository.existsById(id)) throw new EntityNotFoundException("No encontrado");
+        repository.deleteById(id);
     }
 
-    public List<CatalogoTarea> findSinHabilitacion() {
-        return repository.findByRequiereHabilitacionIsNull();
+    // --- MAPPERS ---
+
+    private void updateEntityFromRequest(CatalogoTarea entidad, CatalogoTareaRequest request) {
+        entidad.setNombre(request.getNombre());
+        entidad.setDescripcion(request.getDescripcion());
+
+        if (request.getIdHabilitacion() != null) {
+            Habilitacion h = habilitacionRepository.findById(request.getIdHabilitacion())
+                    .orElseThrow(() -> new EntityNotFoundException("Habilitación no encontrada"));
+            entidad.setRequiereHabilitacion(h);
+        } else {
+            entidad.setRequiereHabilitacion(null);
+        }
     }
 
-    public List<CatalogoTarea> findPorHabilitacion(Habilitacion h) {
-        return repository.findByRequiereHabilitacion(h);
+    private CatalogoTareaResponse mapToResponse(CatalogoTarea entidad) {
+        CatalogoTareaResponse res = new CatalogoTareaResponse();
+        res.setIdCatalogoTarea(entidad.getIdCatalogoTarea());
+        res.setNombre(entidad.getNombre());
+        res.setDescripcion(entidad.getDescripcion());
+
+        if (entidad.getRequiereHabilitacion() != null) {
+            res.setIdHabilitacion(entidad.getRequiereHabilitacion().getIdHabilitacion());
+            res.setNombreHabilitacion(entidad.getRequiereHabilitacion().getNombre());
+        }
+        return res;
     }
 }

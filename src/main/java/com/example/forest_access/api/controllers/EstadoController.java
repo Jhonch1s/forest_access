@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/forest_access/api/estados")
+@RequestMapping("/api/estados")
 public class EstadoController {
 
     private EstadoService estadoservice;

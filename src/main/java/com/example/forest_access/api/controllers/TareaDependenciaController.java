@@ -11,7 +11,7 @@ import java.net.URI;
 import java.util.List;
 
 @RestController
-@RequestMapping("/forest_access/api/tarea_dependencias")
+@RequestMapping("/api/tarea_dependencias")
 public class TareaDependenciaController {
 
     private TareaDependenciaService service;

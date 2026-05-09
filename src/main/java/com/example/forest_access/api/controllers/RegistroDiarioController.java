@@ -1,7 +1,9 @@
 package com.example.forest_access.api.controllers;
 
-import com.example.forest_access.biz.dao.entities.RegistroDiario;
+import com.example.forest_access.api.controllers.request.RegistroDiarioRequest;
+import com.example.forest_access.api.controllers.response.RegistroDiarioResponse;
 import com.example.forest_access.biz.dao.services.RegistroDiarioService;
+import lombok.AllArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,36 +14,32 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/forest_access/api/registros-diarios")
+@AllArgsConstructor
 public class RegistroDiarioController {
 
     private final RegistroDiarioService service;
 
-    public RegistroDiarioController(RegistroDiarioService service) {
-        this.service = service;
-    }
-
     @GetMapping
-    public ResponseEntity<List<RegistroDiario>> findAll() {
+    public ResponseEntity<List<RegistroDiarioResponse>> findAll() {
         return ResponseEntity.ok(service.findAll());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<RegistroDiario> findById(@PathVariable Integer id) {
+    public ResponseEntity<RegistroDiarioResponse> findById(@PathVariable Integer id) {
         return ResponseEntity.ok(service.findById(id));
     }
 
     @PostMapping("/create")
-    public ResponseEntity<RegistroDiario> create(@RequestBody RegistroDiario registro) {
-        RegistroDiario creado = service.create(registro);
-        URI location = URI.create("/forest_access/api/registros-diarios/" + creado.getIdRegistro());
-        return ResponseEntity.created(location).body(creado);
+    public ResponseEntity<RegistroDiarioResponse> create(@RequestBody RegistroDiarioRequest request) {
+        RegistroDiarioResponse creada = service.create(request);
+        return ResponseEntity.created(URI.create("/api/registros-diarios/" + creada.getIdRegistro())).body(creada);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<RegistroDiario> update(
+    public ResponseEntity<RegistroDiarioResponse> update(
             @PathVariable Integer id,
-            @RequestBody RegistroDiario datos) {
-        return ResponseEntity.ok(service.update(id, datos));
+            @RequestBody RegistroDiarioRequest request) {
+        return ResponseEntity.ok(service.update(id, request));
     }
 
     @DeleteMapping("/{id}")
@@ -50,15 +48,8 @@ public class RegistroDiarioController {
         return ResponseEntity.noContent().build();
     }
 
-
-    @GetMapping("/fecha/{fecha}")
-    public ResponseEntity<List<RegistroDiario>> findByFecha(
-            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha) {
-        return ResponseEntity.ok(service.findByFecha(fecha));
-    }
-
     @GetMapping("/empleado/{idEmpleado}")
-    public ResponseEntity<List<RegistroDiario>> findByEmpleado(@PathVariable Integer idEmpleado) {
+    public ResponseEntity<List<RegistroDiarioResponse>> findByEmpleado(@PathVariable Integer idEmpleado) {
         return ResponseEntity.ok(service.findPorIdEmpleado(idEmpleado));
     }
 }

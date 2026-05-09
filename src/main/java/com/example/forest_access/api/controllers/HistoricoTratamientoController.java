@@ -9,7 +9,7 @@ import java.net.URI;
 import java.util.List;
 
 @RestController
-@RequestMapping("/forest_access/api/historico_tratamientos")
+@RequestMapping("/api/historico_tratamientos")
 public class HistoricoTratamientoController {
 
     private HistoricoTratamientoService service;
