@@ -27,7 +27,7 @@ public class WebSecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable) // Desactiva CSRF para APIs
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/forest_access/api/**",
+                                "/api/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/v3/api-docs/**"

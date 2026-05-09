@@ -1,5 +1,6 @@
 package com.example.forest_access.biz.dao.services;
 
+import com.example.forest_access.api.controllers.response.UsuarioResponse;
 import com.example.forest_access.biz.dao.entities.Campo;
 import com.example.forest_access.biz.dao.entities.Usuario;
 import com.example.forest_access.biz.dao.repositories.UsuarioRepository;
@@ -16,8 +17,6 @@ import java.util.List;
 @AllArgsConstructor
 public class UsuarioService {
 
-
-
     private UsuarioRepository repo;
 
     @Transactional(readOnly = true)
@@ -27,39 +26,48 @@ public class UsuarioService {
     }
 
     @Transactional
-    public List<UsuarioDTO> mostrarUsuarios() {
-
+    public List<UsuarioResponse> mostrarUsuarios() {
         return repo.findAll().stream().map(u ->{
-            UsuarioDTO dto = new UsuarioDTO();
+            UsuarioResponse dto = new UsuarioResponse();
             BeanUtils.copyProperties(u, dto);
             return dto;
         }).toList();
     }
 
     @Transactional
-    public Usuario createUsuario(UsuarioDTO usuario) {
+    public UsuarioResponse createUsuario(UsuarioDTO usuario) {
         Usuario usu = new Usuario();
         usu.setNombreUsuario(usuario.getNombreUsuario());
         usu.setPassword(usuario.getPassword());
-        return repo.save(usu);
+
+        UsuarioResponse usu1= new UsuarioResponse();
+        usu1.setId(usu.getId());
+        usu1.setNombreUsuario(usuario.getNombreUsuario());
+        repo.save(usu);
+        return usu1;
     }
 
     @Transactional
-    public UsuarioDTO updateUsuario(Integer id,UsuarioDTO usuario) {
+    public UsuarioResponse updateUsuario(Integer id,UsuarioDTO usuario) {
         Usuario existente =  findById(id);
+        UsuarioResponse response = new UsuarioResponse();
+
+        response.setNombreUsuario(usuario.getNombreUsuario());
+        response.setId(existente.getId());
+
         existente.setNombreUsuario(usuario.getNombreUsuario());
         existente.setPassword(usuario.getPassword());
+
         repo.save(existente);
-        return usuario;
+
+        return response;
     }
 
     @Transactional
-    public UsuarioDTO deleteUsuario(Integer id) {
+    public void deleteUsuario(Integer id) {
         Usuario existente = findById(id);
-        UsuarioDTO mostrar = new UsuarioDTO();
-        BeanUtils.copyProperties(existente, mostrar);
         repo.delete(existente);
-        return mostrar;
+        return;
     }
 
 

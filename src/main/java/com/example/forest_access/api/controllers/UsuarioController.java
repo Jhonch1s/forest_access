@@ -1,5 +1,6 @@
 package com.example.forest_access.api.controllers;
 
+import com.example.forest_access.api.controllers.response.UsuarioResponse;
 import com.example.forest_access.biz.dao.entities.Usuario;
 import com.example.forest_access.biz.dao.services.UsuarioService;
 import com.example.forest_access.dto.UsuarioDTO;
@@ -21,26 +22,27 @@ public class UsuarioController {
     }
 
     @GetMapping("/all")
-    public ResponseEntity<List<UsuarioDTO>> obtenerUsuarios() {
+    public ResponseEntity<List<UsuarioResponse>> obtenerUsuarios() {
         return ResponseEntity.ok(usuarioService.mostrarUsuarios());
     }
 
     @PostMapping("/create")
-    public ResponseEntity<UsuarioDTO> crearUsuario(@RequestBody UsuarioDTO usuario) {
-        Usuario usu = usuarioService.createUsuario(usuario);
+    public ResponseEntity<UsuarioResponse> crearUsuario(@RequestBody UsuarioDTO usuario) {
+        UsuarioResponse usu = usuarioService.createUsuario(usuario);
         URI location = URI.create("/forest_access/api/usuarios/" + usu.getId());
-        return ResponseEntity.created(location).body(usuario);
+        return ResponseEntity.created(location).body(usu);
     }
 
     @PutMapping("/update/{id}")
-    public ResponseEntity<UsuarioDTO> actualizarUsuario(@PathVariable Integer id,
+    public ResponseEntity<UsuarioResponse> actualizarUsuario(@PathVariable Integer id,
             @RequestBody UsuarioDTO usuario) {
         return  ResponseEntity.ok(usuarioService.updateUsuario(id, usuario));
     }
 
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<UsuarioDTO> eliminarUsuario(@PathVariable Integer id) {
-        return ResponseEntity.ok(usuarioService.deleteUsuario(id));
+    public ResponseEntity<Void> eliminarUsuario(@PathVariable Integer id) {
+        usuarioService.deleteUsuario(id);
+        return ResponseEntity.noContent().build();
     }
 
 
