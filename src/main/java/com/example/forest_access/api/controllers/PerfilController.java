@@ -1,8 +1,8 @@
 package com.example.forest_access.api.controllers;
 
-import com.example.forest_access.api.controllers.request.PerfilRequest;
 import com.example.forest_access.api.controllers.response.PerfilResponse;
 import com.example.forest_access.biz.dao.services.PerfilService;
+import com.example.forest_access.dto.PerfilDTO;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,18 +27,20 @@ public class PerfilController {
         return ResponseEntity.ok(service.findById(id));
     }
 
+    // Recibe el DTO
     @PostMapping("/create")
-    public ResponseEntity<PerfilResponse> create(@RequestBody PerfilRequest request) {
-        PerfilResponse creado = service.create(request);
-        URI location = URI.create("/forest_access/api/perfiles/" + creado.getId());
+    public ResponseEntity<PerfilResponse> create(@RequestBody PerfilDTO dto) {
+        PerfilResponse creado = service.create(dto);
+        URI location = URI.create("/api/perfiles/" + creado.getId()); // Ajustado sin /forest_access para mantener consistencia general, cámbialo si es necesario
         return ResponseEntity.created(location).body(creado);
     }
 
+    // Recibe el DTO
     @PutMapping("/{id}")
     public ResponseEntity<PerfilResponse> update(
             @PathVariable Long id,
-            @RequestBody PerfilRequest request) {
-        return ResponseEntity.ok(service.update(id, request));
+            @RequestBody PerfilDTO dto) {
+        return ResponseEntity.ok(service.update(id, dto));
     }
 
     @DeleteMapping("/{id}")

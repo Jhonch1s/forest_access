@@ -7,7 +7,7 @@ import java.time.LocalDate;
 public class EmpleadoCuadrillaRequest {
     private Integer idEmpleado;
     private Integer idCuadrilla;
-    private LocalDate fechaInicio; // Suele ser necesaria aunque no esté explícita en la entidad (o se toma hoy)
+    private LocalDate fechaInicio;
     private LocalDate fechaFin;
     private String rol;
 }

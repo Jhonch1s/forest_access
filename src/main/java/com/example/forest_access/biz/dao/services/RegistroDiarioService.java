@@ -1,17 +1,16 @@
 package com.example.forest_access.biz.dao.services;
 
-import com.example.forest_access.api.controllers.request.RegistroDiarioRequest;
 import com.example.forest_access.api.controllers.response.RegistroDiarioResponse;
 import com.example.forest_access.biz.dao.entities.Empleado;
 import com.example.forest_access.biz.dao.entities.RegistroDiario;
 import com.example.forest_access.biz.dao.repositories.EmpleadoRepository;
 import com.example.forest_access.biz.dao.repositories.RegistroDiarioRepository;
+import com.example.forest_access.dto.RegistroDiarioDTO;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -37,40 +36,39 @@ public class RegistroDiarioService {
     }
 
     @Transactional
-    public RegistroDiarioResponse create(RegistroDiarioRequest request) {
-        Empleado empleado = empleadoRepository.findById(request.getIdEmpleado())
+    public RegistroDiarioResponse create(RegistroDiarioDTO dto) {
+        Empleado empleado = empleadoRepository.findById(dto.getEmpleado().getIdEmpleado())
                 .orElseThrow(() -> new EntityNotFoundException("Empleado no encontrado"));
 
-        if (repository.existsByEmpleadoAndFecha(empleado, request.getFecha())) {
+        if (repository.existsByEmpleadoAndFecha(empleado, dto.getFecha())) {
             throw new IllegalArgumentException(
                     String.format("El empleado %s ya tiene un registro para la fecha %s",
-                            empleado.getNombre(), request.getFecha())
+                            empleado.getNombre(), dto.getFecha())
             );
         }
 
         RegistroDiario nuevo = new RegistroDiario();
-        updateEntityFromRequest(nuevo, request, empleado);
+        updateEntityFromDTO(nuevo, dto, empleado);
 
         return mapToResponse(repository.save(nuevo));
     }
 
     @Transactional
-    public RegistroDiarioResponse update(Integer id, RegistroDiarioRequest request) {
+    public RegistroDiarioResponse update(Integer id, RegistroDiarioDTO dto) {
         RegistroDiario existente = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Registro no encontrado"));
 
-        Empleado empleado = empleadoRepository.findById(request.getIdEmpleado())
+        Empleado empleado = empleadoRepository.findById(dto.getEmpleado().getIdEmpleado())
                 .orElseThrow(() -> new EntityNotFoundException("Empleado no encontrado"));
 
-        // Validar duplicado si cambia fecha o empleado
-        if (!existente.getFecha().equals(request.getFecha()) ||
-                !existente.getEmpleado().getIdEmpleado().equals(request.getIdEmpleado())) {
-            if (repository.existsByEmpleadoAndFecha(empleado, request.getFecha())) {
+        if (!existente.getFecha().equals(dto.getFecha()) ||
+                !existente.getEmpleado().getIdEmpleado().equals(dto.getEmpleado().getIdEmpleado())) {
+            if (repository.existsByEmpleadoAndFecha(empleado, dto.getFecha())) {
                 throw new IllegalArgumentException("Ya existe un registro para ese empleado en esa fecha.");
             }
         }
 
-        updateEntityFromRequest(existente, request, empleado);
+        updateEntityFromDTO(existente, dto, empleado);
         return mapToResponse(repository.save(existente));
     }
 
@@ -87,14 +85,12 @@ public class RegistroDiarioService {
                 .collect(Collectors.toList());
     }
 
-    // --- MAPPERS ---
-
-    private void updateEntityFromRequest(RegistroDiario entidad, RegistroDiarioRequest request, Empleado empleado) {
-        entidad.setFecha(request.getFecha());
+    private void updateEntityFromDTO(RegistroDiario entidad, RegistroDiarioDTO dto, Empleado empleado) {
+        entidad.setFecha(dto.getFecha());
         entidad.setEmpleado(empleado);
-        entidad.setJornales(request.getJornales());
-        entidad.setAdelanto(request.getAdelanto());
-        entidad.setObservaciones(request.getObservaciones());
+        entidad.setJornales(dto.getJornales());
+        entidad.setAdelanto(dto.getAdelanto());
+        entidad.setObservaciones(dto.getObservaciones());
     }
 
     private RegistroDiarioResponse mapToResponse(RegistroDiario entidad) {

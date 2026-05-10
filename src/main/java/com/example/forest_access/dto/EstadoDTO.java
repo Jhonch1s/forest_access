@@ -4,5 +4,6 @@ import lombok.Data;
 
 @Data
 public class EstadoDTO {
+    private Integer IdEstado;
     private String nombre;
 }

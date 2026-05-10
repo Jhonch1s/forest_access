@@ -1,9 +1,9 @@
 package com.example.forest_access.biz.dao.services;
 
-import com.example.forest_access.api.controllers.request.TareaRequest;
 import com.example.forest_access.api.controllers.response.TareaResponse;
 import com.example.forest_access.biz.dao.entities.*;
 import com.example.forest_access.biz.dao.repositories.*;
+import com.example.forest_access.dto.TareaDTO;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -37,18 +37,18 @@ public class TareaService {
     }
 
     @Transactional
-    public TareaResponse create(TareaRequest request) {
+    public TareaResponse create(TareaDTO dto) {
         Tarea nueva = new Tarea();
         nueva.setFechaCreacion(LocalDate.now());
-        updateEntityFromRequest(nueva, request);
+        updateEntityFromDTO(nueva, dto);
         return mapToResponse(repository.save(nueva));
     }
 
     @Transactional
-    public TareaResponse update(Integer id, TareaRequest request) {
+    public TareaResponse update(Integer id, TareaDTO dto) {
         Tarea existente = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Tarea no encontrada"));
-        updateEntityFromRequest(existente, request);
+        updateEntityFromDTO(existente, dto);
         return mapToResponse(repository.save(existente));
     }
 
@@ -57,8 +57,6 @@ public class TareaService {
         if (!repository.existsById(id)) throw new EntityNotFoundException("No existe");
         repository.deleteById(id);
     }
-
-    // --- Métodos de búsqueda especializados ---
 
     @Transactional(readOnly = true)
     public List<TareaResponse> findPorEmpleado(Integer idEmpleado) {
@@ -74,31 +72,43 @@ public class TareaService {
                 .map(this::mapToResponse).collect(Collectors.toList());
     }
 
-    // --- MAPPERS (Traducción) ---
+    private void updateEntityFromDTO(Tarea entidad, TareaDTO dto) {
+        entidad.setDescripcion(dto.getDescripcion());
+        entidad.setObservaciones(dto.getObservaciones());
+        entidad.setHoras(dto.getHoras());
+        entidad.setFechaInicio(dto.getFechaInicio());
+        entidad.setFechaFinEstimada(dto.getFechaFinEstimada());
+        entidad.setFechaFinalizacion(dto.getFechaFinalizacion());
 
-    private void updateEntityFromRequest(Tarea entidad, TareaRequest request) {
-        entidad.setDescripcion(request.getDescripcion());
-        entidad.setObservaciones(request.getObservaciones());
-        entidad.setHoras(request.getHoras());
-        entidad.setFechaInicio(request.getFechaInicio());
-        entidad.setFechaFinEstimada(request.getFechaFinEstimada());
-        entidad.setFechaFinalizacion(request.getFechaFinalizacion());
+        if (dto.getEmpleado() != null && dto.getEmpleado().getIdEmpleado() != null) {
+            entidad.setEmpleado(empleadoRepository.findById(dto.getEmpleado().getIdEmpleado()).orElse(null));
+        } else {
+            entidad.setEmpleado(null);
+        }
 
-        // Resolución de Relaciones por ID
-        if (request.getIdEmpleado() != null)
-            entidad.setEmpleado(empleadoRepository.findById(request.getIdEmpleado()).orElse(null));
+        if (dto.getEstado() != null && dto.getEstado().getIdEstado() != null) {
+            entidad.setEstado(estadoRepository.findById(dto.getEstado().getIdEstado()).orElse(null));
+        } else {
+            entidad.setEstado(null);
+        }
 
-        if (request.getIdEstado() != null)
-            entidad.setEstado(estadoRepository.findById(request.getIdEstado()).orElse(null));
+        if (dto.getCatalogoTarea() != null && dto.getCatalogoTarea().getIdCatalogoTarea() != null) {
+            entidad.setCatalogoTarea(catalogoRepository.findById(dto.getCatalogoTarea().getIdCatalogoTarea()).orElse(null));
+        } else {
+            entidad.setCatalogoTarea(null);
+        }
 
-        if (request.getIdCatalogoTarea() != null)
-            entidad.setCatalogoTarea(catalogoRepository.findById(request.getIdCatalogoTarea()).orElse(null));
+        if (dto.getPlantilla() != null && dto.getPlantilla().getIdPlantilla() != null) {
+            entidad.setPlantilla(plantillaRepository.findById(dto.getPlantilla().getIdPlantilla()).orElse(null));
+        } else {
+            entidad.setPlantilla(null);
+        }
 
-        if (request.getIdPlantilla() != null)
-            entidad.setPlantilla(plantillaRepository.findById(request.getIdPlantilla()).orElse(null));
-
-        if (request.getIdHistoricoTratamiento() != null)
-            entidad.setHistoricoTratamiento(historicoRepository.findById(request.getIdHistoricoTratamiento()).orElse(null));
+        if (dto.getHistoricoTratamiento() != null && dto.getHistoricoTratamiento().getIdHistorico() != null) {
+            entidad.setHistoricoTratamiento(historicoRepository.findById(dto.getHistoricoTratamiento().getIdHistorico()).orElse(null));
+        } else {
+            entidad.setHistoricoTratamiento(null);
+        }
     }
 
     private TareaResponse mapToResponse(Tarea t) {
@@ -108,7 +118,6 @@ public class TareaService {
         res.setHoras(t.getHoras());
         res.setFechaFinalizacion(t.getFechaFinalizacion());
 
-        // Nombres legibles para el Frontend
         if (t.getEmpleado() != null) res.setNombreEmpleado(t.getEmpleado().getNombre());
         if (t.getEstado() != null) res.setNombreEstado(t.getEstado().getNombre());
         if (t.getCatalogoTarea() != null) res.setNombreTareaCatalogo(t.getCatalogoTarea().getNombre());

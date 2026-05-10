@@ -1,9 +1,9 @@
 package com.example.forest_access.biz.dao.services;
 
-import com.example.forest_access.api.controllers.request.CuadrillaRequest;
 import com.example.forest_access.api.controllers.response.CuadrillaResponse;
 import com.example.forest_access.biz.dao.entities.Cuadrilla;
 import com.example.forest_access.biz.dao.repositories.CuadrillaRepository;
+import com.example.forest_access.dto.CuadrillaDTO;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -40,31 +40,31 @@ public class CuadrillaService {
     }
 
     @Transactional
-    public CuadrillaResponse create(CuadrillaRequest request) {
-        if (repository.findByNombre(request.getNombre()).isPresent()) {
-            throw new IllegalArgumentException("Ya existe una cuadrilla con el nombre: " + request.getNombre());
+    public CuadrillaResponse create(CuadrillaDTO dto) {
+        if (repository.findByNombre(dto.getNombre()).isPresent()) {
+            throw new IllegalArgumentException("Ya existe una cuadrilla con el nombre: " + dto.getNombre());
         }
 
         Cuadrilla nueva = new Cuadrilla();
-        nueva.setNombre(request.getNombre());
-        nueva.setActiva(request.getActiva() != null ? request.getActiva() : true);
+        nueva.setNombre(dto.getNombre());
+        nueva.setActiva(dto.getActiva() != null ? dto.getActiva() : true);
 
         return mapToResponse(repository.save(nueva));
     }
 
     @Transactional
-    public CuadrillaResponse update(Integer id, CuadrillaRequest request) {
+    public CuadrillaResponse update(Integer id, CuadrillaDTO dto) {
         Cuadrilla existente = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("No existe la cuadrilla"));
 
-        if (!existente.getNombre().equalsIgnoreCase(request.getNombre())) {
-            if (repository.findByNombre(request.getNombre()).isPresent()) {
-                throw new IllegalArgumentException("El nombre '" + request.getNombre() + "' ya está en uso.");
+        if (!existente.getNombre().equalsIgnoreCase(dto.getNombre())) {
+            if (repository.findByNombre(dto.getNombre()).isPresent()) {
+                throw new IllegalArgumentException("El nombre '" + dto.getNombre() + "' ya está en uso.");
             }
         }
 
-        existente.setNombre(request.getNombre());
-        existente.setActiva(request.getActiva());
+        existente.setNombre(dto.getNombre());
+        existente.setActiva(dto.getActiva());
 
         return mapToResponse(repository.save(existente));
     }
@@ -75,7 +75,6 @@ public class CuadrillaService {
         repository.deleteById(id);
     }
 
-    // Mapper para el Response
     private CuadrillaResponse mapToResponse(Cuadrilla entidad) {
         CuadrillaResponse res = new CuadrillaResponse();
         res.setIdCuadrilla(entidad.getIdCuadrilla());

@@ -1,11 +1,11 @@
 package com.example.forest_access.biz.dao.services;
 
-import com.example.forest_access.api.controllers.request.CatalogoTareaRequest;
 import com.example.forest_access.api.controllers.response.CatalogoTareaResponse;
 import com.example.forest_access.biz.dao.entities.CatalogoTarea;
 import com.example.forest_access.biz.dao.entities.Habilitacion;
 import com.example.forest_access.biz.dao.repositories.CatalogoTareaRepository;
 import com.example.forest_access.biz.dao.repositories.HabilitacionRepository;
+import com.example.forest_access.dto.CatalogoTareaDTO;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -36,29 +36,29 @@ public class CatalogoTareaService {
     }
 
     @Transactional
-    public CatalogoTareaResponse create(CatalogoTareaRequest request) {
-        if (repository.findByNombre(request.getNombre()).isPresent()) {
-            throw new IllegalArgumentException("Ya existe una tarea con el nombre: " + request.getNombre());
+    public CatalogoTareaResponse create(CatalogoTareaDTO dto) {
+        if (repository.findByNombre(dto.getNombre()).isPresent()) {
+            throw new IllegalArgumentException("Ya existe una tarea con el nombre: " + dto.getNombre());
         }
 
         CatalogoTarea nueva = new CatalogoTarea();
-        updateEntityFromRequest(nueva, request);
+        updateEntityFromDTO(nueva, dto);
 
         return mapToResponse(repository.save(nueva));
     }
 
     @Transactional
-    public CatalogoTareaResponse update(Integer id, CatalogoTareaRequest request) {
+    public CatalogoTareaResponse update(Integer id, CatalogoTareaDTO dto) {
         CatalogoTarea existente = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("No existe la tarea"));
 
-        if (!existente.getNombre().equalsIgnoreCase(request.getNombre())) {
-            if (repository.findByNombre(request.getNombre()).isPresent()) {
-                throw new IllegalArgumentException("El nombre '" + request.getNombre() + "' ya está en uso.");
+        if (!existente.getNombre().equalsIgnoreCase(dto.getNombre())) {
+            if (repository.findByNombre(dto.getNombre()).isPresent()) {
+                throw new IllegalArgumentException("El nombre '" + dto.getNombre() + "' ya está en uso.");
             }
         }
 
-        updateEntityFromRequest(existente, request);
+        updateEntityFromDTO(existente, dto);
         return mapToResponse(repository.save(existente));
     }
 
@@ -68,14 +68,12 @@ public class CatalogoTareaService {
         repository.deleteById(id);
     }
 
-    // --- MAPPERS ---
+    private void updateEntityFromDTO(CatalogoTarea entidad, CatalogoTareaDTO dto) {
+        entidad.setNombre(dto.getNombre());
+        entidad.setDescripcion(dto.getDescripcion());
 
-    private void updateEntityFromRequest(CatalogoTarea entidad, CatalogoTareaRequest request) {
-        entidad.setNombre(request.getNombre());
-        entidad.setDescripcion(request.getDescripcion());
-
-        if (request.getIdHabilitacion() != null) {
-            Habilitacion h = habilitacionRepository.findById(request.getIdHabilitacion())
+        if (dto.getRequiereHabilitacion() != null && dto.getRequiereHabilitacion().getIdHabilitacion() != null) {
+            Habilitacion h = habilitacionRepository.findById(dto.getRequiereHabilitacion().getIdHabilitacion())
                     .orElseThrow(() -> new EntityNotFoundException("Habilitación no encontrada"));
             entidad.setRequiereHabilitacion(h);
         } else {

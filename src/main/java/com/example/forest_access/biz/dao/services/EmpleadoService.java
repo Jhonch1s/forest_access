@@ -1,11 +1,11 @@
 package com.example.forest_access.biz.dao.services;
 
-import com.example.forest_access.api.controllers.request.EmpleadoRequest;
 import com.example.forest_access.api.controllers.response.EmpleadoResponse;
 import com.example.forest_access.biz.dao.entities.CategoriaEmpleado;
 import com.example.forest_access.biz.dao.entities.Empleado;
+import com.example.forest_access.biz.dao.repositories.CategoriaEmpleadoRepository;
 import com.example.forest_access.biz.dao.repositories.EmpleadoRepository;
-import com.example.forest_access.biz.dao.repositories.CategoriaEmpleadoRepository; // Necesario
+import com.example.forest_access.dto.EmpleadoDTO;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -35,33 +35,32 @@ public class EmpleadoService {
         return mapToResponse(empleado);
     }
 
+    // AHORA USA EL DTO GENERAL
     @Transactional
-    public EmpleadoResponse create(EmpleadoRequest request) {
-        // Validaciones de unicidad
-        if (repository.findByCedula(request.getCedula()).isPresent()) {
-            throw new IllegalArgumentException("Ya existe un empleado con la cédula: " + request.getCedula());
+    public EmpleadoResponse create(EmpleadoDTO dto) {
+        if (repository.findByCedula(dto.getCedula()).isPresent()) {
+            throw new IllegalArgumentException("Ya existe un empleado con la cédula: " + dto.getCedula());
         }
 
-        // Transformar Request -> Entidad
         Empleado nuevo = new Empleado();
-        updateEntityFromRequest(nuevo, request);
+        updateEntityFromDTO(nuevo, dto);
 
         return mapToResponse(repository.save(nuevo));
     }
 
+    // AHORA USA EL DTO GENERAL
     @Transactional
-    public EmpleadoResponse update(Integer id, EmpleadoRequest request) {
+    public EmpleadoResponse update(Integer id, EmpleadoDTO dto) {
         Empleado existente = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Empleado no encontrado"));
 
-        // Validar cédula si cambió
-        if (!existente.getCedula().equals(request.getCedula())) {
-            if (repository.findByCedula(request.getCedula()).isPresent()) {
+        if (!existente.getCedula().equals(dto.getCedula())) {
+            if (repository.findByCedula(dto.getCedula()).isPresent()) {
                 throw new IllegalArgumentException("La nueva cédula ya está registrada.");
             }
         }
 
-        updateEntityFromRequest(existente, request);
+        updateEntityFromDTO(existente, dto);
         return mapToResponse(repository.save(existente));
     }
 
@@ -73,22 +72,26 @@ public class EmpleadoService {
         repository.deleteById(id);
     }
 
-    // Métodos privados de mapeo (Traducción)
-    private void updateEntityFromRequest(Empleado entidad, EmpleadoRequest request) {
-        entidad.setNombre(request.getNombre());
-        entidad.setCedula(request.getCedula());
-        entidad.setTelefono(request.getTelefono());
-        entidad.setEmail(request.getEmail());
-        entidad.setFechaIngreso(request.getFechaIngreso());
-        entidad.setActivo(request.getActivo() != null ? request.getActivo() : true);
+    // MAPPER: De DTO a Entidad
+    private void updateEntityFromDTO(Empleado entidad, EmpleadoDTO dto) {
+        entidad.setNombre(dto.getNombre());
+        entidad.setCedula(dto.getCedula());
+        entidad.setTelefono(dto.getTelefono());
+        entidad.setEmail(dto.getEmail());
+        entidad.setFechaIngreso(dto.getFechaIngreso());
+        entidad.setActivo(dto.getActivo() != null ? dto.getActivo() : true);
 
-        if (request.getIdCategoria() != null) {
-            CategoriaEmpleado cat = categoriaRepository.findById(request.getIdCategoria())
+        // Como el DTO tiene un CategoriaEmpleadoDTO anidado, sacamos el ID de ahí
+        if (dto.getCategoria() != null && dto.getCategoria().getIdCategoria() != null) {
+            CategoriaEmpleado cat = categoriaRepository.findById(dto.getCategoria().getIdCategoria())
                     .orElseThrow(() -> new EntityNotFoundException("Categoría no encontrada"));
             entidad.setCategoria(cat);
+        } else {
+            entidad.setCategoria(null);
         }
     }
 
+    // MAPPER: De Entidad a Response
     private EmpleadoResponse mapToResponse(Empleado entidad) {
         EmpleadoResponse res = new EmpleadoResponse();
         res.setIdEmpleado(entidad.getIdEmpleado());

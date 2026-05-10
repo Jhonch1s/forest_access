@@ -1,8 +1,8 @@
 package com.example.forest_access.api.controllers;
 
-import com.example.forest_access.api.controllers.request.PlantillaTareaRequest;
 import com.example.forest_access.api.controllers.response.PlantillaTareaResponse;
 import com.example.forest_access.biz.dao.services.PlantillaTareaService;
+import com.example.forest_access.dto.PlantillaTareaDTO;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -28,17 +28,17 @@ public class PlantillaTareaController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<PlantillaTareaResponse> create(@RequestBody PlantillaTareaRequest request) {
-        PlantillaTareaResponse creada = service.create(request);
-        URI location = URI.create("/forest_access/api/plantillas-tarea/" + creada.getIdPlantilla());
+    public ResponseEntity<PlantillaTareaResponse> create(@RequestBody PlantillaTareaDTO dto) {
+        PlantillaTareaResponse creada = service.create(dto);
+        URI location = URI.create("/api/plantillas-tarea/" + creada.getIdPlantilla());
         return ResponseEntity.created(location).body(creada);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<PlantillaTareaResponse> update(
             @PathVariable Integer id,
-            @RequestBody PlantillaTareaRequest request) {
-        return ResponseEntity.ok(service.update(id, request));
+            @RequestBody PlantillaTareaDTO dto) {
+        return ResponseEntity.ok(service.update(id, dto));
     }
 
     @DeleteMapping("/{id}")

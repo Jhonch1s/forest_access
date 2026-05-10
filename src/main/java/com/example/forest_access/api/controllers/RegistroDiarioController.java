@@ -1,15 +1,13 @@
 package com.example.forest_access.api.controllers;
 
-import com.example.forest_access.api.controllers.request.RegistroDiarioRequest;
 import com.example.forest_access.api.controllers.response.RegistroDiarioResponse;
 import com.example.forest_access.biz.dao.services.RegistroDiarioService;
+import com.example.forest_access.dto.RegistroDiarioDTO;
 import lombok.AllArgsConstructor;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
-import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -30,16 +28,16 @@ public class RegistroDiarioController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<RegistroDiarioResponse> create(@RequestBody RegistroDiarioRequest request) {
-        RegistroDiarioResponse creada = service.create(request);
+    public ResponseEntity<RegistroDiarioResponse> create(@RequestBody RegistroDiarioDTO dto) {
+        RegistroDiarioResponse creada = service.create(dto);
         return ResponseEntity.created(URI.create("/api/registros-diarios/" + creada.getIdRegistro())).body(creada);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<RegistroDiarioResponse> update(
             @PathVariable Integer id,
-            @RequestBody RegistroDiarioRequest request) {
-        return ResponseEntity.ok(service.update(id, request));
+            @RequestBody RegistroDiarioDTO dto) {
+        return ResponseEntity.ok(service.update(id, dto));
     }
 
     @DeleteMapping("/{id}")

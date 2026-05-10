@@ -4,7 +4,7 @@ import lombok.Data;
 
 import java.time.LocalDate;
 
-@Data // <--- Sin esto, el Service no puede usar los 'set'
+@Data
 public class EmpleadoResponse {
     private Integer idEmpleado;
     private String nombre;

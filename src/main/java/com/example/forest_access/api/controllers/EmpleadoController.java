@@ -1,8 +1,8 @@
 package com.example.forest_access.api.controllers;
 
-import com.example.forest_access.api.controllers.request.EmpleadoRequest;
 import com.example.forest_access.api.controllers.response.EmpleadoResponse;
 import com.example.forest_access.biz.dao.services.EmpleadoService;
+import com.example.forest_access.dto.EmpleadoDTO;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -28,17 +28,17 @@ public class EmpleadoController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<EmpleadoResponse> create(@RequestBody EmpleadoRequest request) {
-        EmpleadoResponse creado = service.create(request);
-        URI location = URI.create("/forest_access/api/empleados/" + creado.getIdEmpleado());
+    public ResponseEntity<EmpleadoResponse> create(@RequestBody EmpleadoDTO dto) {
+        EmpleadoResponse creado = service.create(dto);
+        URI location = URI.create("/api/empleados/" + creado.getIdEmpleado());
         return ResponseEntity.created(location).body(creado);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<EmpleadoResponse> update(
             @PathVariable Integer id,
-            @RequestBody EmpleadoRequest request) {
-        return ResponseEntity.ok(service.update(id, request));
+            @RequestBody EmpleadoDTO dto) {
+        return ResponseEntity.ok(service.update(id, dto));
     }
 
     @DeleteMapping("/{id}")

@@ -1,8 +1,8 @@
 package com.example.forest_access.api.controllers;
 
-import com.example.forest_access.api.controllers.request.CuadrillaRequest;
 import com.example.forest_access.api.controllers.response.CuadrillaResponse;
 import com.example.forest_access.biz.dao.services.CuadrillaService;
+import com.example.forest_access.dto.CuadrillaDTO;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -33,16 +33,16 @@ public class CuadrillaController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<CuadrillaResponse> create(@RequestBody CuadrillaRequest request) {
-        CuadrillaResponse creada = service.create(request);
+    public ResponseEntity<CuadrillaResponse> create(@RequestBody CuadrillaDTO dto) {
+        CuadrillaResponse creada = service.create(dto);
         return ResponseEntity.created(URI.create("/api/cuadrillas/" + creada.getIdCuadrilla())).body(creada);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<CuadrillaResponse> update(
             @PathVariable Integer id,
-            @RequestBody CuadrillaRequest request) {
-        return ResponseEntity.ok(service.update(id, request));
+            @RequestBody CuadrillaDTO dto) {
+        return ResponseEntity.ok(service.update(id, dto));
     }
 
     @DeleteMapping("/{id}")

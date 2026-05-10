@@ -4,6 +4,7 @@ import lombok.Data;
 
 @Data
 public class HabilitacionDTO {
+    private Integer idHabilitacion;
     private String nombre;
     private String descripcion;
 }

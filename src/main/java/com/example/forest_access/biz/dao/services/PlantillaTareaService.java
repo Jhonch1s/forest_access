@@ -1,11 +1,11 @@
 package com.example.forest_access.biz.dao.services;
 
-import com.example.forest_access.api.controllers.request.PlantillaTareaRequest;
 import com.example.forest_access.api.controllers.response.PlantillaTareaResponse;
 import com.example.forest_access.biz.dao.entities.CatalogoTarea;
 import com.example.forest_access.biz.dao.entities.PlantillaTarea;
+import com.example.forest_access.biz.dao.repositories.CatalogoTareaRepository;
 import com.example.forest_access.biz.dao.repositories.PlantillaTareaRepository;
-import com.example.forest_access.biz.dao.repositories.CatalogoTareaRepository; // Necesario
+import com.example.forest_access.dto.PlantillaTareaDTO;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -36,29 +36,29 @@ public class PlantillaTareaService {
     }
 
     @Transactional
-    public PlantillaTareaResponse create(PlantillaTareaRequest request) {
-        if (repository.findByNombre(request.getNombre()).isPresent()) {
-            throw new IllegalArgumentException("Ya existe una plantilla con el nombre: " + request.getNombre());
+    public PlantillaTareaResponse create(PlantillaTareaDTO dto) {
+        if (repository.findByNombre(dto.getNombre()).isPresent()) {
+            throw new IllegalArgumentException("Ya existe una plantilla con el nombre: " + dto.getNombre());
         }
 
         PlantillaTarea nueva = new PlantillaTarea();
-        updateEntityFromRequest(nueva, request);
+        updateEntityFromDTO(nueva, dto);
 
         return mapToResponse(repository.save(nueva));
     }
 
     @Transactional
-    public PlantillaTareaResponse update(Integer id, PlantillaTareaRequest request) {
+    public PlantillaTareaResponse update(Integer id, PlantillaTareaDTO dto) {
         PlantillaTarea existente = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Plantilla no encontrada"));
 
-        if (!existente.getNombre().equalsIgnoreCase(request.getNombre())) {
-            if (repository.findByNombre(request.getNombre()).isPresent()) {
-                throw new IllegalArgumentException("El nombre '" + request.getNombre() + "' ya está en uso.");
+        if (!existente.getNombre().equalsIgnoreCase(dto.getNombre())) {
+            if (repository.findByNombre(dto.getNombre()).isPresent()) {
+                throw new IllegalArgumentException("El nombre '" + dto.getNombre() + "' ya está en uso.");
             }
         }
 
-        updateEntityFromRequest(existente, request);
+        updateEntityFromDTO(existente, dto);
         return mapToResponse(repository.save(existente));
     }
 
@@ -77,15 +77,16 @@ public class PlantillaTareaService {
                 .collect(Collectors.toList());
     }
 
-    // Métodos de Mapeo
-    private void updateEntityFromRequest(PlantillaTarea entidad, PlantillaTareaRequest request) {
-        entidad.setNombre(request.getNombre());
-        entidad.setDescripcion(request.getDescripcion());
+    private void updateEntityFromDTO(PlantillaTarea entidad, PlantillaTareaDTO dto) {
+        entidad.setNombre(dto.getNombre());
+        entidad.setDescripcion(dto.getDescripcion());
 
-        if (request.getIdCatalogoTarea() != null) {
-            CatalogoTarea cat = catalogoRepository.findById(request.getIdCatalogoTarea())
+        if (dto.getCatalogoTarea() != null && dto.getCatalogoTarea().getIdCatalogoTarea() != null) {
+            CatalogoTarea cat = catalogoRepository.findById(dto.getCatalogoTarea().getIdCatalogoTarea())
                     .orElseThrow(() -> new EntityNotFoundException("Catálogo de tarea no encontrado"));
             entidad.setCatalogoTarea(cat);
+        } else {
+            entidad.setCatalogoTarea(null);
         }
     }
 

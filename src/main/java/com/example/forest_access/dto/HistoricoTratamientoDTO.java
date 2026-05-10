@@ -6,6 +6,7 @@ import java.time.LocalDate;
 
 @Data
 public class HistoricoTratamientoDTO {
+    private Integer idHistorico;
     private Integer idParcela;
     private Integer idTratamiento;
     private Integer cuadrilla;

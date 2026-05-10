@@ -1,17 +1,16 @@
 package com.example.forest_access.biz.dao.services;
 
-import com.example.forest_access.api.controllers.request.LiquidacionRequest;
 import com.example.forest_access.api.controllers.response.LiquidacionResponse;
 import com.example.forest_access.biz.dao.entities.Empleado;
 import com.example.forest_access.biz.dao.entities.Liquidacion;
 import com.example.forest_access.biz.dao.repositories.EmpleadoRepository;
 import com.example.forest_access.biz.dao.repositories.LiquidacionRepository;
+import com.example.forest_access.dto.LiquidacionDTO;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -37,31 +36,27 @@ public class LiquidacionService {
     }
 
     @Transactional
-    public LiquidacionResponse create(LiquidacionRequest request) {
-        Empleado empleado = empleadoRepository.findById(request.getIdEmpleado())
+    public LiquidacionResponse create(LiquidacionDTO dto) {
+        Empleado empleado = empleadoRepository.findById(dto.getEmpleado().getIdEmpleado())
                 .orElseThrow(() -> new EntityNotFoundException("Empleado no encontrado"));
 
-        if (repository.existsByEmpleadoAndPeriodoInicioAndPeriodoFin(empleado, request.getPeriodoInicio(), request.getPeriodoFin())) {
+        if (repository.existsByEmpleadoAndPeriodoInicioAndPeriodoFin(empleado, dto.getPeriodoInicio(), dto.getPeriodoFin())) {
             throw new IllegalArgumentException("Ya existe una liquidación para este empleado en este período.");
         }
 
         Liquidacion nueva = new Liquidacion();
         nueva.setEmpleado(empleado);
-        nueva.setPeriodoInicio(request.getPeriodoInicio());
-        nueva.setPeriodoFin(request.getPeriodoFin());
-        nueva.setObservaciones(request.getObservaciones());
+        nueva.setPeriodoInicio(dto.getPeriodoInicio());
+        nueva.setPeriodoFin(dto.getPeriodoFin());
+        nueva.setObservaciones(dto.getObservaciones());
 
-        // llamar a métodos de cálculo
-        // nueva.setTotalJornales(calculoService.sumarJornales(empleado, inicio, fin));
-        // nueva.setTotalFinal(nueva.getTotalNominal().subtract(nueva.getAdelantos()));
-
-        nueva.setTotalJornales(request.getTotalJornales());
-        nueva.setValorJornal(request.getValorJornal());
-        nueva.setTotalNominal(request.getTotalNominal());
-        nueva.setTotalProduccion(request.getTotalProduccion());
-        nueva.setTotalIncentivo(request.getTotalIncentivo());
-        nueva.setAdelantos(request.getAdelantos());
-        nueva.setTotalFinal(request.getTotalFinal());
+        nueva.setTotalJornales(dto.getTotalJornales());
+        nueva.setValorJornal(dto.getValorJornal());
+        nueva.setTotalNominal(dto.getTotalNominal());
+        nueva.setTotalProduccion(dto.getTotalProduccion());
+        nueva.setTotalIncentivo(dto.getTotalIncentivo());
+        nueva.setAdelantos(dto.getAdelantos());
+        nueva.setTotalFinal(dto.getTotalFinal());
 
         return mapToResponse(repository.save(nueva));
     }
@@ -79,7 +74,6 @@ public class LiquidacionService {
                 .collect(Collectors.toList());
     }
 
-    // Mapper para limpiar la salida
     private LiquidacionResponse mapToResponse(Liquidacion liq) {
         LiquidacionResponse res = new LiquidacionResponse();
         res.setIdLiquidacion(liq.getIdLiquidacion());

@@ -4,7 +4,6 @@ import lombok.Data;
 
 @Data
 public class TratamientoDependenciaRequest {
-    private Integer idTratamientoAnterior;
-    private Integer idTratamientoPosterior;
-    private Integer diasEsperaMinimo;
+    private Integer filtroDiasEsperaMayoresA;
+    private Integer idTratamientoEspecifico;
 }

@@ -1,8 +1,8 @@
 package com.example.forest_access.api.controllers;
 
-import com.example.forest_access.api.controllers.request.EmpleadoCuadrillaRequest;
 import com.example.forest_access.api.controllers.response.EmpleadoCuadrillaResponse;
 import com.example.forest_access.biz.dao.services.EmpleadoCuadrillaService;
+import com.example.forest_access.dto.EmpleadoCuadrillaDTO;
 import lombok.AllArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -24,8 +24,8 @@ public class EmpleadoCuadrillaController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<EmpleadoCuadrillaResponse> create(@RequestBody EmpleadoCuadrillaRequest request) {
-        return ResponseEntity.ok(service.create(request));
+    public ResponseEntity<EmpleadoCuadrillaResponse> create(@RequestBody EmpleadoCuadrillaDTO dto) {
+        return ResponseEntity.ok(service.create(dto));
     }
 
     @DeleteMapping("/delete")

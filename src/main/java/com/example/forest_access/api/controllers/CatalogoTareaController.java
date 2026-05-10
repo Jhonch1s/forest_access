@@ -1,8 +1,8 @@
 package com.example.forest_access.api.controllers;
 
-import com.example.forest_access.api.controllers.request.CatalogoTareaRequest;
 import com.example.forest_access.api.controllers.response.CatalogoTareaResponse;
 import com.example.forest_access.biz.dao.services.CatalogoTareaService;
+import com.example.forest_access.dto.CatalogoTareaDTO;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -28,16 +28,16 @@ public class CatalogoTareaController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<CatalogoTareaResponse> create(@RequestBody CatalogoTareaRequest request) {
-        CatalogoTareaResponse creada = service.create(request);
+    public ResponseEntity<CatalogoTareaResponse> create(@RequestBody CatalogoTareaDTO dto) {
+        CatalogoTareaResponse creada = service.create(dto);
         return ResponseEntity.created(URI.create("/api/catalogo-tareas/" + creada.getIdCatalogoTarea())).body(creada);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<CatalogoTareaResponse> update(
             @PathVariable Integer id,
-            @RequestBody CatalogoTareaRequest request) {
-        return ResponseEntity.ok(service.update(id, request));
+            @RequestBody CatalogoTareaDTO dto) {
+        return ResponseEntity.ok(service.update(id, dto));
     }
 
     @DeleteMapping("/{id}")

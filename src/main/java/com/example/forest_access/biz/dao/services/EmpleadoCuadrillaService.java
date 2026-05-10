@@ -1,6 +1,5 @@
 package com.example.forest_access.biz.dao.services;
 
-import com.example.forest_access.api.controllers.request.EmpleadoCuadrillaRequest;
 import com.example.forest_access.api.controllers.response.EmpleadoCuadrillaResponse;
 import com.example.forest_access.biz.dao.entities.Cuadrilla;
 import com.example.forest_access.biz.dao.entities.Empleado;
@@ -9,6 +8,7 @@ import com.example.forest_access.biz.dao.entities.embeddables.EmpleadoCuadrillaI
 import com.example.forest_access.biz.dao.repositories.CuadrillaRepository;
 import com.example.forest_access.biz.dao.repositories.EmpleadoCuadrillaRepository;
 import com.example.forest_access.biz.dao.repositories.EmpleadoRepository;
+import com.example.forest_access.dto.EmpleadoCuadrillaDTO;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -34,27 +34,25 @@ public class EmpleadoCuadrillaService {
     }
 
     @Transactional
-    public EmpleadoCuadrillaResponse create(EmpleadoCuadrillaRequest request) {
-        // 1. Buscar entidades
-        Cuadrilla cuadrilla = cuadrillaRepository.findById(request.getIdCuadrilla())
+    public EmpleadoCuadrillaResponse create(EmpleadoCuadrillaDTO dto) {
+        Cuadrilla cuadrilla = cuadrillaRepository.findById(dto.getCuadrilla().getIdCuadrilla())
                 .orElseThrow(() -> new EntityNotFoundException("Cuadrilla no encontrada"));
-        Empleado empleado = empleadoRepository.findById(request.getIdEmpleado())
+        Empleado empleado = empleadoRepository.findById(dto.getEmpleado().getIdEmpleado())
                 .orElseThrow(() -> new EntityNotFoundException("Empleado no encontrado"));
 
-        // 2. Crear ID compuesto (si no viene fecha, usamos hoy)
-        LocalDate fechaIni = request.getFechaInicio() != null ? request.getFechaInicio() : LocalDate.now();
+        LocalDate fechaIni = LocalDate.now();
         EmpleadoCuadrillaId id = new EmpleadoCuadrillaId(cuadrilla.getIdCuadrilla(), empleado.getIdEmpleado(), fechaIni);
 
         if (repository.existsById(id)) {
-            throw new IllegalArgumentException("El empleado ya tiene esta asignación registrada");
+            throw new IllegalArgumentException("El empleado ya tiene esta asignación registrada para la fecha actual.");
         }
 
-        // 3. Guardar
         EmpleadoCuadrilla relacion = new EmpleadoCuadrilla();
         relacion.setId(id);
         relacion.setCuadrilla(cuadrilla);
         relacion.setEmpleado(empleado);
-        relacion.setFechaFin(request.getFechaFin());
+        relacion.setFechaFin(dto.getFechaFin());
+
 
         return mapToResponse(repository.save(relacion));
     }
@@ -81,6 +79,7 @@ public class EmpleadoCuadrillaService {
         res.setNombreEmpleado(entidad.getEmpleado().getNombre());
         res.setFechaInicio(entidad.getId().getFechaInicio());
         res.setFechaFin(entidad.getFechaFin());
+
         return res;
     }
 }

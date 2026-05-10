@@ -1,12 +1,12 @@
 package com.example.forest_access.biz.dao.services;
 
-import com.example.forest_access.api.controllers.request.TratamientoDependenciaRequest;
 import com.example.forest_access.api.controllers.response.TratamientoDependenciaResponse;
 import com.example.forest_access.biz.dao.entities.Tratamiento;
 import com.example.forest_access.biz.dao.entities.TratamientoDependencia;
 import com.example.forest_access.biz.dao.entities.embeddables.TratamientoDependenciaId;
 import com.example.forest_access.biz.dao.repositories.TratamientoDependenciaRepository;
 import com.example.forest_access.biz.dao.repositories.TratamientoRepository;
+import com.example.forest_access.dto.TratamientoDependenciaDTO;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -30,43 +30,43 @@ public class TratamientoDependenciaService {
     }
 
     @Transactional
-    public TratamientoDependenciaResponse create(TratamientoDependenciaRequest request) {
-        if (request.getIdTratamientoAnterior().equals(request.getIdTratamientoPosterior())) {
+    public TratamientoDependenciaResponse create(TratamientoDependenciaDTO dto) {
+        Integer idAnterior = dto.getTratamientoAnterior().getIdTratamiento();
+        Integer idPosterior = dto.getTratamientoPosterior().getIdTratamiento();
+
+        if (idAnterior.equals(idPosterior)) {
             throw new IllegalArgumentException("Un tratamiento no puede depender de sí mismo");
         }
 
-        // 1. Crear el ID compuesto
-        TratamientoDependenciaId id = new TratamientoDependenciaId(
-                request.getIdTratamientoPosterior(),
-                request.getIdTratamientoAnterior()
-        );
+        TratamientoDependenciaId id = new TratamientoDependenciaId(idPosterior, idAnterior);
 
-        // 2. Buscar las entidades padres
-        Tratamiento anterior = tratamientoRepository.findById(request.getIdTratamientoAnterior())
+        if (repository.existsById(id)) {
+            throw new IllegalArgumentException("Esta dependencia ya está registrada");
+        }
+
+        Tratamiento anterior = tratamientoRepository.findById(idAnterior)
                 .orElseThrow(() -> new EntityNotFoundException("Tratamiento anterior no encontrado"));
-        Tratamiento posterior = tratamientoRepository.findById(request.getIdTratamientoPosterior())
+        Tratamiento posterior = tratamientoRepository.findById(idPosterior)
                 .orElseThrow(() -> new EntityNotFoundException("Tratamiento posterior no encontrado"));
 
-        // 3. Armar la entidad
         TratamientoDependencia nueva = new TratamientoDependencia();
         nueva.setId(id);
         nueva.setTratamientoPosterior(posterior);
         nueva.setTratamientoAnterior(anterior);
-        nueva.setDiasEsperaMinimo(request.getDiasEsperaMinimo());
+        nueva.setDiasEsperaMinimo(dto.getDiasEsperaMinimo());
 
         return mapToResponse(repository.save(nueva));
     }
 
     @Transactional
     public void delete(Integer idAnterior, Integer idPosterior) {
-        TratamientoDependenciaId id = new TratamientoDependenciaId(idAnterior, idPosterior);
+        TratamientoDependenciaId id = new TratamientoDependenciaId(idPosterior, idAnterior);
         if (!repository.existsById(id)) {
             throw new EntityNotFoundException("Dependencia no encontrada");
         }
         repository.deleteById(id);
     }
 
-    // Mapper de Entidad a Response
     private TratamientoDependenciaResponse mapToResponse(TratamientoDependencia entidad) {
         TratamientoDependenciaResponse res = new TratamientoDependenciaResponse();
         res.setIdTratamientoAnterior(entidad.getId().getIdTratamientoAnterior());
