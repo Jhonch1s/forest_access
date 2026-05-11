@@ -17,7 +17,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 public class ForestAccessApplication{
 
 	public static void main(String[] args) {
-		SpringApplication.run(ForestAccessApplication.class, args);
+        SpringApplication.run(ForestAccessApplication.class, args);
 	}
 
 	@Bean("pool-01")

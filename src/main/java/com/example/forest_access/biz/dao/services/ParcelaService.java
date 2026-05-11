@@ -1,5 +1,6 @@
 package com.example.forest_access.biz.dao.services;
 
+import com.example.forest_access.api.controllers.response.ParcelaResponse;
 import com.example.forest_access.biz.dao.entities.Parcela;
 import com.example.forest_access.biz.dao.entities.Rodal;
 import com.example.forest_access.biz.dao.repositories.ParcelaRepository;
@@ -28,17 +29,17 @@ public class ParcelaService {
     }
 
     @Transactional
-    public List<ParcelaDTO> mostrarParcelas() {
+    public List<ParcelaResponse> mostrarParcelas() {
 
         return parcelaRepository.findAll().stream().map(p ->{
-            ParcelaDTO parcela = new ParcelaDTO();
+            ParcelaResponse parcela = new ParcelaResponse();
             parcela.setNombre(p.getNombre());
             parcela.setArea(p.getArea());
             parcela.setTipoCultivo(p.getTipoCultivo());
             parcela.setAnioPlantacion(p.getAnioPlantacion());
             parcela.setCoordLat(p.getCoordLat());
             parcela.setCoordLng(p.getCoordLng());
-            parcela.setIdRodal(p.getRodal().getIdRodal());
+            parcela.setNombreRodal(p.getRodal().getNombre());
             return parcela;
         }).toList();
     }
@@ -58,7 +59,7 @@ public class ParcelaService {
     }
 
     @Transactional
-    public ParcelaDTO updateParcela(Integer id,ParcelaDTO parcela){
+    public ParcelaResponse updateParcela(Integer id,ParcelaDTO parcela){
         Parcela parcelaExistente = findById(id);
         if (!Objects.equals(parcela.getNombre(), parcelaExistente.getNombre())) {
             Parcela parcelaConMismoNombre = parcelaRepository.findByNombre(parcela.getNombre())
@@ -79,14 +80,18 @@ public class ParcelaService {
         parcelaExistente.setCoordLat(parcela.getCoordLat());
         parcelaExistente.setCoordLng(parcela.getCoordLng());
         parcelaRepository.save(parcelaExistente);
-        return parcela;
+        ParcelaResponse p = new ParcelaResponse();
+        BeanUtils.copyProperties(parcela,p);
+        p.setNombreRodal(parcelaExistente.getRodal().getNombre());
+        return p;
     }
 
     @Transactional
-    public ParcelaDTO deleteParcela(Integer id){
+    public ParcelaResponse deleteParcela(Integer id){
         Parcela parcelaExistente = findById(id);
-        ParcelaDTO p = new ParcelaDTO();
+        ParcelaResponse p = new ParcelaResponse();
         BeanUtils.copyProperties(parcelaExistente,p);
+        p.setNombreRodal(parcelaExistente.getRodal().getNombre());
         parcelaRepository.delete(parcelaExistente);
         return p;
     }

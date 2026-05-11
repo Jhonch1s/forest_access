@@ -29,5 +29,5 @@ public class Producto {
     @Column(name = "unidad_base")
     private String unidadBase;                   // "litro", "kg"
 
-    // getters y setters
+
 }

@@ -1,5 +1,6 @@
 package com.example.forest_access.biz.dao.services;
 
+import com.example.forest_access.api.controllers.response.ProductoTratamientoResponse;
 import com.example.forest_access.biz.dao.entities.Producto;
 import com.example.forest_access.biz.dao.entities.ProductoTratamiento;
 import com.example.forest_access.biz.dao.entities.Tratamiento;
@@ -8,6 +9,7 @@ import com.example.forest_access.biz.dao.repositories.ProductoTratamientoReposit
 import com.example.forest_access.biz.dao.repositories.TratamientoRepository;
 import com.example.forest_access.dto.ProductoTratamientoDTO;
 import lombok.AllArgsConstructor;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,12 +23,12 @@ public class ProductoTratamientoService {
     private TratamientoRepository tratamientoRepository;
     private ProductoRepository productoRepository;
 
-    public List<ProductoTratamientoDTO> findAll()
+    public List<ProductoTratamientoResponse> findAll()
     {
         return prodRepo.findAll().stream().map( PT ->{
-            ProductoTratamientoDTO prodTraDTO = new ProductoTratamientoDTO();
-            prodTraDTO.setIdProducto(PT.getProducto().getIdProducto());
-            prodTraDTO.setIdTratamiento(PT.getTratamiento().getIdTratamiento());
+            ProductoTratamientoResponse prodTraDTO = new ProductoTratamientoResponse();
+            prodTraDTO.setNombreProducto(PT.getProducto().getNombre());
+            prodTraDTO.setNombreTratamiento(PT.getTratamiento().getNombre());
             prodTraDTO.setDosis(PT.getDosis());
             prodTraDTO.setUnidad(PT.getUnidad());
             return prodTraDTO;
@@ -51,7 +53,7 @@ public class ProductoTratamientoService {
     }
 
     @Transactional
-    public ProductoTratamientoDTO update(Integer idProductoTratamiento, ProductoTratamientoDTO productoTratamientoActualizado) {
+    public ProductoTratamientoResponse update(Integer idProductoTratamiento, ProductoTratamientoDTO productoTratamientoActualizado) {
         ProductoTratamiento existente = prodRepo.findById(idProductoTratamiento)
                 .orElseThrow(() -> new RuntimeException("ProductoTratamiento no encontrado con id: " + idProductoTratamiento));
 
@@ -71,21 +73,24 @@ public class ProductoTratamientoService {
                             productoTratamientoActualizado.getIdProducto()));
             existente.setProducto(producto);
         }
-
+        ProductoTratamientoResponse ptr = new ProductoTratamientoResponse();
+        BeanUtils.copyProperties(existente,ptr);
+        ptr.setNombreProducto(existente.getProducto().getNombre());
+        ptr.setNombreTratamiento(existente.getTratamiento().getNombre());
         prodRepo.save(existente);
-        return productoTratamientoActualizado;
+        return ptr;
     }
 
     @Transactional
-    public ProductoTratamientoDTO delete(Integer idProductoTratamiento) {
+    public ProductoTratamientoResponse delete(Integer idProductoTratamiento) {
         if (!prodRepo.existsById(idProductoTratamiento)) {
             throw new RuntimeException("ProductoTratamiento no encontrado con id: " + idProductoTratamiento);
         }
         ProductoTratamiento prod = prodRepo.findById(idProductoTratamiento)
                         .orElseThrow( ()->new RuntimeException("ProductoTratamiento no encotrado"));
-        ProductoTratamientoDTO prodTraDTO = new ProductoTratamientoDTO();
-        prodTraDTO.setIdProducto(prod.getProducto().getIdProducto());
-        prodTraDTO.setIdTratamiento(prod.getTratamiento().getIdTratamiento());
+        ProductoTratamientoResponse prodTraDTO = new ProductoTratamientoResponse();
+        prodTraDTO.setNombreProducto(prod.getProducto().getNombre());
+        prodTraDTO.setNombreTratamiento(prod.getTratamiento().getNombre());
         prodTraDTO.setDosis(prod.getDosis());
         prodTraDTO.setUnidad(prod.getUnidad());
         prodRepo.deleteById(idProductoTratamiento);
