@@ -1,5 +1,6 @@
 package com.example.forest_access.biz.dao.services;
 
+import com.example.forest_access.api.controllers.response.HistoricoTratamientoResponse;
 import com.example.forest_access.biz.dao.entities.Cuadrilla;
 import com.example.forest_access.biz.dao.entities.HistoricoTratamiento;
 import com.example.forest_access.biz.dao.entities.Parcela;
@@ -24,13 +25,13 @@ public class HistoricoTratamientoService {
     private final TratamientoRepository tratamientoRepository;
     private final CuadrillaRepository cuadrillaRepository;
 
-    public List<HistoricoTratamientoDTO> findAll() {
+    public List<HistoricoTratamientoResponse> findAll() {
 
         return historyRepo.findAll().stream().map(ht ->{
-            HistoricoTratamientoDTO htdto = new HistoricoTratamientoDTO();
-            htdto.setIdParcela(ht.getParcela().getIdParcela());
-            htdto.setIdTratamiento(ht.getTratamiento().getIdTratamiento());
-            htdto.setCuadrilla(ht.getCuadrilla().getIdCuadrilla());
+            HistoricoTratamientoResponse htdto = new HistoricoTratamientoResponse();
+            htdto.setNombreParcela(ht.getParcela().getNombre());
+            htdto.setNombreTratamiento(ht.getTratamiento().getNombre());
+            htdto.setNombreCuadrilla(ht.getCuadrilla().getNombre());
             htdto.setFechaInicio(ht.getFechaInicio());
             htdto.setFechaFin(ht.getFechaFin());
             htdto.setObservaciones(ht.getObservaciones());
@@ -63,21 +64,21 @@ public class HistoricoTratamientoService {
 
 
     @Transactional
-    public HistoricoTratamientoDTO delete(Integer idHistorico) {
+    public HistoricoTratamientoResponse delete(Integer idHistorico) {
         if (!historyRepo.existsById(idHistorico)) {
             throw new RuntimeException("HistoricoTratamiento no encontrado con id: " + idHistorico);
         }
         HistoricoTratamiento ht = historyRepo.findById(idHistorico)
                         .orElseThrow(()->new RuntimeException("HistoricoTratamiento no encontrado con id: " + idHistorico));
-        HistoricoTratamientoDTO htdto = new HistoricoTratamientoDTO();
-        htdto.setIdParcela(ht.getParcela().getIdParcela());
-        htdto.setIdTratamiento(ht.getTratamiento().getIdTratamiento());
-        htdto.setCuadrilla(ht.getCuadrilla().getIdCuadrilla());
-        htdto.setFechaInicio(ht.getFechaInicio());
-        htdto.setFechaFin(ht.getFechaFin());
-        htdto.setObservaciones(ht.getObservaciones());
+        HistoricoTratamientoResponse htr = new HistoricoTratamientoResponse();
+        htr.setNombreParcela(ht.getParcela().getNombre());
+        htr.setNombreTratamiento(ht.getTratamiento().getNombre());
+        htr.setNombreCuadrilla(ht.getCuadrilla().getNombre());
+        htr.setFechaInicio(ht.getFechaInicio());
+        htr.setFechaFin(ht.getFechaFin());
+        htr.setObservaciones(ht.getObservaciones());
         historyRepo.deleteById(idHistorico);
-        return htdto;
+        return htr;
     }
 
 }

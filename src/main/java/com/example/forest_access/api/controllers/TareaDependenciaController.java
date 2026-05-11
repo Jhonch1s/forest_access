@@ -1,5 +1,6 @@
 package com.example.forest_access.api.controllers;
 
+import com.example.forest_access.api.controllers.response.TareaDependenciaResponse;
 import com.example.forest_access.biz.dao.entities.Rodal;
 import com.example.forest_access.biz.dao.entities.TareaDependencia;
 import com.example.forest_access.biz.dao.entities.embeddables.TareaDependenciaId;
@@ -22,24 +23,27 @@ public class TareaDependenciaController {
     }
 
     @GetMapping("/all")
-    public ResponseEntity<List<TareaDependenciaDTO>> getTareaDependencias() {
+    public ResponseEntity<List<TareaDependenciaResponse>> getTareaDependencias() {
         return ResponseEntity.ok(service.mostrarTareaDependencias());
     }
 
     @PostMapping("/create")
-    public ResponseEntity<TareaDependenciaDTO> crearTareaDependencia(@RequestBody
+    public ResponseEntity<TareaDependenciaResponse> crearTareaDependencia(@RequestBody
                                                                   TareaDependenciaDTO tareaDependencia) {
         TareaDependencia tarea = service.crearTareaDependencia(tareaDependencia);
+        TareaDependenciaResponse tdr = new TareaDependenciaResponse();
+        tdr.setTareaAnterior(tarea.getTareaAnterior().getDescripcion());
+        tdr.setTareaPosterior(tarea.getTareaPosterior().getDescripcion());
         URI location = URI.create("/forest_access/api/tarea_dependencias/" + tarea.getId());
-        return ResponseEntity.created(location).body(tareaDependencia);
+        return ResponseEntity.created(location).body(tdr);
 
     }
 
     @DeleteMapping("/delete")
-    public ResponseEntity<TareaDependenciaDTO> borrarDependencia(@RequestParam Integer id_anterior,
+    public ResponseEntity<TareaDependenciaResponse> borrarDependencia(@RequestParam Integer id_anterior,
                                                               @RequestParam Integer id_posterior){
         TareaDependenciaId id = new TareaDependenciaId(id_anterior,id_posterior);
-        TareaDependenciaDTO td= service.deleteTareaDependencia(id);
+        TareaDependenciaResponse td = service.deleteTareaDependencia(id);
         return ResponseEntity.ok(td);
     }
 }

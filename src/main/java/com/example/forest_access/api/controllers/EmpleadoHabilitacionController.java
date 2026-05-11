@@ -1,9 +1,11 @@
 package com.example.forest_access.api.controllers;
 
+import com.example.forest_access.api.controllers.response.EmpleadoHabilitacionResponse;
 import com.example.forest_access.biz.dao.entities.EmpleadoHabilitacion;
 import com.example.forest_access.biz.dao.entities.embeddables.EmpleadoHabilitacionId;
 import com.example.forest_access.biz.dao.services.EmpleadoHabilitacionService;
 import com.example.forest_access.dto.EmpleadoHabilitacionDTO;
+import org.springframework.beans.BeanUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,23 +23,27 @@ public class EmpleadoHabilitacionController {
     }
 
     @GetMapping("/all")
-    public ResponseEntity<List<EmpleadoHabilitacionDTO>> getAllHabilitaciones(){
+    public ResponseEntity<List<EmpleadoHabilitacionResponse>> getAllHabilitaciones(){
         return ResponseEntity.ok(service.getHabilitacionesEmp());
     }
 
     @PostMapping("/create")
-    public ResponseEntity<EmpleadoHabilitacionDTO> crearRelacion(@RequestBody EmpleadoHabilitacionDTO empHab){
+    public ResponseEntity<EmpleadoHabilitacionResponse> crearRelacion(@RequestBody EmpleadoHabilitacionDTO empHab){
         EmpleadoHabilitacion nuevo = service.createHabilitacionEmp(empHab);
+        EmpleadoHabilitacionResponse ehr = new EmpleadoHabilitacionResponse();
+        BeanUtils.copyProperties(nuevo,ehr);
+        ehr.setNombreEmpleado(nuevo.getEmpleado().getNombre());
+        ehr.setNombreHabilitacion(nuevo.getHabilitacion().getNombre());
         URI location = URI.create("/forest_access/api/empleado_habilitaciones/"
                 + nuevo.getId());
-        return ResponseEntity.created(location).body(empHab);
+        return ResponseEntity.created(location).body(ehr);
     }
 
     @DeleteMapping("/delete")
-    public ResponseEntity<EmpleadoHabilitacionDTO> borrarEmpleadoHabilitacion(@RequestParam Integer idEmpleado,
+    public ResponseEntity<EmpleadoHabilitacionResponse> borrarEmpleadoHabilitacion(@RequestParam Integer idEmpleado,
                                                            @RequestParam Integer idHabilitacion){
         EmpleadoHabilitacionId id = new EmpleadoHabilitacionId(idEmpleado, idHabilitacion);
-        EmpleadoHabilitacionDTO EH = service.deleteHabilitacionEmp(id);
+        EmpleadoHabilitacionResponse EH = service.deleteHabilitacionEmp(id);
         return ResponseEntity.ok(EH);
     }
 

@@ -1,6 +1,7 @@
 package com.example.forest_access.biz.dao.services;
 
 
+import com.example.forest_access.api.controllers.response.EmpleadoHabilitacionResponse;
 import com.example.forest_access.biz.dao.entities.Empleado;
 import com.example.forest_access.biz.dao.entities.EmpleadoCuadrilla;
 import com.example.forest_access.biz.dao.entities.EmpleadoHabilitacion;
@@ -36,12 +37,12 @@ public class EmpleadoHabilitacionService {
     }
 
     @Transactional
-    public List<EmpleadoHabilitacionDTO> getHabilitacionesEmp(){
+    public List<EmpleadoHabilitacionResponse> getHabilitacionesEmp(){
 
         return empleadoHabilitacionRepository.findAll().stream().map( eh ->{
-            EmpleadoHabilitacionDTO empleadohabilitacion = new EmpleadoHabilitacionDTO();
-            empleadohabilitacion.setIdEmpleado(eh.getEmpleado().getIdEmpleado());
-            empleadohabilitacion.setIdHabilitacion(eh.getHabilitacion().getIdHabilitacion());
+            EmpleadoHabilitacionResponse empleadohabilitacion = new EmpleadoHabilitacionResponse();
+            empleadohabilitacion.setNombreEmpleado(eh.getEmpleado().getNombre());
+            empleadohabilitacion.setNombreHabilitacion(eh.getHabilitacion().getNombre());
             empleadohabilitacion.setFechaEmision(eh.getFechaEmision());
             empleadohabilitacion.setFechaVencimiento(eh.getFechaVencimiento());
             return  empleadohabilitacion;
@@ -76,14 +77,14 @@ public class EmpleadoHabilitacionService {
     }
 
     @Transactional
-    public EmpleadoHabilitacionDTO deleteHabilitacionEmp(EmpleadoHabilitacionId id){
+    public EmpleadoHabilitacionResponse deleteHabilitacionEmp(EmpleadoHabilitacionId id){
         if(!empleadoHabilitacionRepository.existsById(id)){
             throw new EntityNotFoundException("No existe la asignación a eliminar");
         }
         EmpleadoHabilitacion emphab = findById(id);
-        EmpleadoHabilitacionDTO emphab1 = new EmpleadoHabilitacionDTO();
-        emphab1.setIdEmpleado(emphab.getEmpleado().getIdEmpleado());
-        emphab1.setIdHabilitacion(emphab.getHabilitacion().getIdHabilitacion());
+        EmpleadoHabilitacionResponse emphab1 = new EmpleadoHabilitacionResponse();
+        emphab1.setNombreEmpleado(emphab.getEmpleado().getNombre());
+        emphab1.setNombreHabilitacion(emphab.getHabilitacion().getNombre());
         emphab1.setFechaEmision(emphab.getFechaEmision());
         emphab1.setFechaVencimiento(emphab.getFechaVencimiento());
         empleadoHabilitacionRepository.deleteById(id);

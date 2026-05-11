@@ -1,5 +1,6 @@
 package com.example.forest_access.biz.dao.services;
 
+import com.example.forest_access.api.controllers.response.RodalResponse;
 import com.example.forest_access.biz.dao.entities.Campo;
 import com.example.forest_access.biz.dao.entities.Rodal;
 import com.example.forest_access.biz.dao.repositories.CampoRepository;
@@ -28,12 +29,12 @@ public class RodalService {
     }
 
     @Transactional
-    public List<RodalDTO> mostrarRodales() {
+    public List<RodalResponse> mostrarRodales() {
 
         return repository.findAll().stream().map( r ->{
-            RodalDTO rodal = new RodalDTO();
+            RodalResponse rodal = new RodalResponse();
             BeanUtils.copyProperties(r, rodal);
-            rodal.setIdCampo(r.getCampo().getIdCampo());
+            rodal.setNombreCampo(r.getCampo().getNombre());
             return rodal;
         }).toList();
     }
@@ -53,7 +54,7 @@ public class RodalService {
     }
 
     @Transactional
-    public RodalDTO updateRodal(Integer id,RodalDTO rodal) {
+    public RodalResponse updateRodal(Integer id,RodalDTO rodal) {
         Rodal rodalExistente = findById(id);
 
         if (!Objects.equals(rodal.getNombre(), rodalExistente.getNombre())) {
@@ -74,17 +75,23 @@ public class RodalService {
         rodalExistente.setCampo(c);
 
         repository.save(rodalExistente);
+        RodalResponse rodalResponse = new RodalResponse();
+        BeanUtils.copyProperties(rodalExistente, rodalResponse);
+        rodalResponse.setNombreCampo(rodal.getNombre());
 
-        return rodal;
+        return rodalResponse;
     }
 
     @Transactional
-    public RodalDTO deleteRodal(Integer id) {
+    public RodalResponse deleteRodal(Integer id) {
         Rodal rodalExistente = findById(id);
         RodalDTO r = new RodalDTO();
         BeanUtils.copyProperties(rodalExistente,r);
         r.setIdCampo(rodalExistente.getCampo().getIdCampo());
         repository.delete(rodalExistente);
-        return r;
+        RodalResponse rodalResponse = new RodalResponse();
+        BeanUtils.copyProperties(rodalExistente, rodalResponse);
+        rodalResponse.setNombreCampo(rodalExistente.getNombre());
+        return rodalResponse;
     }
 }

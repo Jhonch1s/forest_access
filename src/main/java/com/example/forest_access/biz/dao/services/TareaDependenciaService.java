@@ -1,5 +1,6 @@
 package com.example.forest_access.biz.dao.services;
 
+import com.example.forest_access.api.controllers.response.TareaDependenciaResponse;
 import com.example.forest_access.biz.dao.entities.TareaDependencia;
 import com.example.forest_access.biz.dao.entities.embeddables.TareaDependenciaId;
 import com.example.forest_access.biz.dao.repositories.TareaDependenciaRepository;
@@ -19,14 +20,14 @@ public class TareaDependenciaService {
     private TareaDependenciaRepository repotarea;
     private TareaRepository tareaRepository;
 
-    public List<TareaDependenciaDTO> mostrarTareaDependencias() {
+    public List<TareaDependenciaResponse> mostrarTareaDependencias() {
 
         return repotarea.findAll().stream().map( td-> {
-            TareaDependenciaDTO tdto = new TareaDependenciaDTO();
-            tdto.setIdTareaAnterior(td.getTareaAnterior().getIdTarea());
-            tdto.setIdTareaPosterior(td.getTareaPosterior().getIdTarea());
-            tdto.setDiasEsperaMinimo(td.getDiasEsperaMinimo());
-            return tdto;
+            TareaDependenciaResponse tdr = new TareaDependenciaResponse();
+            tdr.setTareaAnterior(td.getTareaAnterior().getDescripcion());
+            tdr.setTareaPosterior(td.getTareaPosterior().getDescripcion());
+            tdr.setDiasEsperaMinimo(td.getDiasEsperaMinimo());
+            return tdr;
         }).toList();
     }
 
@@ -44,15 +45,15 @@ public class TareaDependenciaService {
 
     }
 
-    public TareaDependenciaDTO deleteTareaDependencia(TareaDependenciaId tareaDependencia) {
+    public TareaDependenciaResponse deleteTareaDependencia(TareaDependenciaId tareaDependencia) {
         repotarea.deleteById(tareaDependencia);
         TareaDependencia td = repotarea.findById(tareaDependencia)
                 .orElseThrow(() -> new IllegalArgumentException("La tarea posterior no existe"));
-        TareaDependenciaDTO tdto = new TareaDependenciaDTO();
-        tdto.setIdTareaAnterior(td.getTareaAnterior().getIdTarea());
-        tdto.setIdTareaPosterior(td.getTareaPosterior().getIdTarea());
-        tdto.setDiasEsperaMinimo(tdto.getDiasEsperaMinimo());
+        TareaDependenciaResponse tdr = new TareaDependenciaResponse();
+        tdr.setTareaAnterior(td.getTareaAnterior().getDescripcion());
+        tdr.setTareaPosterior(td.getTareaPosterior().getDescripcion());
+        tdr.setDiasEsperaMinimo(td.getDiasEsperaMinimo());
         repotarea.delete(td);
-        return tdto;
+        return tdr;
     }
 }
