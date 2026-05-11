@@ -29,17 +29,18 @@ public class ParcelaService {
     }
 
     @Transactional
-    public List<ParcelaResponse> mostrarParcelas() {
+    public List<Parcela> mostrarParcelas() {
 
         return parcelaRepository.findAll().stream().map(p ->{
-            ParcelaResponse parcela = new ParcelaResponse();
-            parcela.setNombre(p.getNombre());
-            parcela.setArea(p.getArea());
-            parcela.setTipoCultivo(p.getTipoCultivo());
-            parcela.setAnioPlantacion(p.getAnioPlantacion());
-            parcela.setCoordLat(p.getCoordLat());
-            parcela.setCoordLng(p.getCoordLng());
-            parcela.setNombreRodal(p.getRodal().getNombre());
+            Parcela parcela = new Parcela();
+            BeanUtils.copyProperties(p, parcela);
+//            parcela.setNombre(p.getNombre());
+//            parcela.setArea(p.getArea());
+//            parcela.setTipoCultivo(p.getTipoCultivo());
+//            parcela.setAnioPlantacion(p.getAnioPlantacion());
+//            parcela.setCoordLat(p.getCoordLat());
+//            parcela.setCoordLng(p.getCoordLng());
+//            parcela.setNombreRodal(p.getRodal().getNombre());
             return parcela;
         }).toList();
     }
@@ -63,7 +64,7 @@ public class ParcelaService {
         Parcela parcelaExistente = findById(id);
         if (!Objects.equals(parcela.getNombre(), parcelaExistente.getNombre())) {
             Parcela parcelaConMismoNombre = parcelaRepository.findByNombre(parcela.getNombre())
-                    .orElseThrow(() -> new RuntimeException("rodal no encotrado"));
+                    .orElse(null);
             if (parcelaConMismoNombre != null && !parcelaConMismoNombre.getIdParcela().equals(id)) {
                 throw new RuntimeException("Ya existe una parcela con el nombre: " + parcela.getNombre());
             }
@@ -72,6 +73,7 @@ public class ParcelaService {
 
 
         parcelaExistente.setArea(parcela.getArea());
+        System.out.println("DEBUG idRodal: " + parcela.getIdRodal());
         Rodal r = rodalrepo.findById(parcela.getIdRodal())
                         .orElseThrow(() -> new RuntimeException("rodal no encontrado"));
         parcelaExistente.setRodal(r);

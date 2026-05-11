@@ -23,7 +23,7 @@ public class ParcelaController {
     }
 
     @GetMapping("/all")
-    public ResponseEntity<List<ParcelaResponse>> mostrarParcelas(){
+    public ResponseEntity<List<Parcela>> mostrarParcelas(){
         return ResponseEntity.ok(parcelaservice.mostrarParcelas());
     }
 

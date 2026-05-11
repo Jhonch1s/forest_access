@@ -21,7 +21,7 @@ public class CampoController {
     }
 
     @GetMapping("/all")
-    public ResponseEntity<List<CampoDTO>> MostrarCampos(){
+    public ResponseEntity<List<Campo>> MostrarCampos(){
         return ResponseEntity.ok(camposervice.MostrarCampos());
     }
 

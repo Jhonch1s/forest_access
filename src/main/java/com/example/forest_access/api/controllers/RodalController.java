@@ -23,7 +23,7 @@ public class RodalController {
     }
 
     @GetMapping("/all")
-    public ResponseEntity <List<RodalResponse>> mostrarRodales(){
+    public ResponseEntity <List<Rodal>> mostrarRodales(){
         return ResponseEntity.ok(rodalService.mostrarRodales());
     }
 

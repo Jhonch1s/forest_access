@@ -29,12 +29,12 @@ public class RodalService {
     }
 
     @Transactional
-    public List<RodalResponse> mostrarRodales() {
+    public List<Rodal> mostrarRodales() {
 
         return repository.findAll().stream().map( r ->{
-            RodalResponse rodal = new RodalResponse();
+            Rodal rodal = new Rodal();
             BeanUtils.copyProperties(r, rodal);
-            rodal.setNombreCampo(r.getCampo().getNombre());
+//            rodal.setNombreCampo(r.getCampo().getNombre());
             return rodal;
         }).toList();
     }
@@ -59,7 +59,7 @@ public class RodalService {
 
         if (!Objects.equals(rodal.getNombre(), rodalExistente.getNombre())) {
             Rodal rodalConMismoNombre = repository.findByNombre(rodal.getNombre())
-                    .orElseThrow(() -> new RuntimeException("rodal no encotrado"));
+                    .orElse(null);
             if (rodalConMismoNombre != null && !rodalConMismoNombre.getIdRodal().equals(id)) {
                 throw new RuntimeException("Ya existe un rodal con el nombre: " + rodal.getNombre());
             }

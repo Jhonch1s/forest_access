@@ -7,6 +7,7 @@ import com.example.forest_access.biz.dao.repositories.CampoRepository;
 import com.example.forest_access.dto.CampoDTO;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
+import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,14 +28,15 @@ public class CampoService {
     }
 
     @Transactional(readOnly =true)
-    public List<CampoDTO> MostrarCampos(){
+    public List<Campo> MostrarCampos(){
         return campoRepository.findAll().stream().map( c ->{
-            CampoDTO campo = new CampoDTO();
-            campo.setNombre(c.getNombre());
-            campo.setPadron(c.getPadron());
-            campo.setSuperficieTotal(c.getSuperficieTotal());
-            campo.setCoordLat(c.getCoordLat());
-            campo.setCoordLng(c.getCoordLng());
+            Campo campo = new Campo();
+            BeanUtils.copyProperties(c,campo);
+//            campo.setNombre(c.getNombre());
+//            campo.setPadron(c.getPadron());
+//            campo.setSuperficieTotal(c.getSuperficieTotal());
+//            campo.setCoordLat(c.getCoordLat());
+//            campo.setCoordLng(c.getCoordLng());
             return campo;
         }).toList();
     }
