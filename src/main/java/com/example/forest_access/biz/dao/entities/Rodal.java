@@ -30,10 +30,10 @@ public class Rodal {
     @Column(precision = 10, scale = 2)
     private BigDecimal area;
 
-    @Column(name = "coord_lat", precision = 10, scale = 7)
+    @Column(name = "coord_lat", precision = 11, scale = 8)
     private BigDecimal coordLat;
 
-    @Column(name = "coord_lng", precision = 10, scale = 7)
+    @Column(name = "coord_lng", precision = 11, scale = 8)
     private BigDecimal coordLng;
 
     // getters y setters
