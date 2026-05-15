@@ -12,5 +12,5 @@ public class EmpleadoDTO {
     private String email;
     private LocalDate fechaIngreso;
     private Boolean activo;
-    private CategoriaEmpleadoDTO categoria;
+    private Integer idCategoria;
 }

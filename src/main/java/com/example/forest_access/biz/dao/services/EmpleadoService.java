@@ -82,8 +82,8 @@ public class EmpleadoService {
         entidad.setActivo(dto.getActivo() != null ? dto.getActivo() : true);
 
         // Como el DTO tiene un CategoriaEmpleadoDTO anidado, sacamos el ID de ahí
-        if (dto.getCategoria() != null && dto.getCategoria().getIdCategoria() != null) {
-            CategoriaEmpleado cat = categoriaRepository.findById(dto.getCategoria().getIdCategoria())
+        if (dto.getIdCategoria() != null) {
+            CategoriaEmpleado cat = categoriaRepository.findById(dto.getIdCategoria())
                     .orElseThrow(() -> new EntityNotFoundException("Categoría no encontrada"));
             entidad.setCategoria(cat);
         } else {
