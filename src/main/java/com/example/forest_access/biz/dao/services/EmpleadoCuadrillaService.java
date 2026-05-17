@@ -52,8 +52,7 @@ public class EmpleadoCuadrillaService {
         relacion.setCuadrilla(cuadrilla);
         relacion.setEmpleado(empleado);
         relacion.setFechaFin(dto.getFechaFin());
-
-
+        relacion.setRol(dto.getRol()); // Faltaba esto!
         return mapToResponse(repository.save(relacion));
     }
 
@@ -79,6 +78,8 @@ public class EmpleadoCuadrillaService {
         res.setNombreEmpleado(entidad.getEmpleado().getNombre());
         res.setFechaInicio(entidad.getId().getFechaInicio());
         res.setFechaFin(entidad.getFechaFin());
+        res.setRol(entidad.getRol()); // Faltaba mapear el rol
+        res.setEsActivo(entidad.getFechaFin() == null); // Mapeamos esActivo automáticamente
 
         return res;
     }

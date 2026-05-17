@@ -3,6 +3,7 @@ package com.example.forest_access.api.controllers;
 import com.example.forest_access.api.controllers.response.CuadrillaResponse;
 import com.example.forest_access.biz.dao.services.CuadrillaService;
 import com.example.forest_access.dto.CuadrillaDTO;
+import com.example.forest_access.api.controllers.request.EmpleadoRequest;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -49,5 +50,19 @@ public class CuadrillaController {
     public ResponseEntity<Void> delete(@PathVariable Integer id) {
         service.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{id}/terminar")
+    public ResponseEntity<Void> terminar(@PathVariable Integer id) {
+        service.terminar(id);
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("/{id}/sincronizar-empleados")
+    public ResponseEntity<Void> sincronizarEmpleados(
+            @PathVariable Integer id,
+            @RequestBody List<EmpleadoRequest> empleados) {
+        service.sincronizarEmpleados(id, empleados);
+        return ResponseEntity.ok().build();
     }
 }
