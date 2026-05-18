@@ -28,26 +28,23 @@ public class SeguridadConfig extends OncePerRequestFilter {
             FilterChain filterChain)
             throws ServletException, IOException {
         try {
-            // SI NO HAY TOKEN, dejamos pasar la petición para que
-            // decida la configuración de HttpSecurity (donde pusiste permitAll)
-            if (!validarUsoDeToken(request)) {
-                filterChain.doFilter(request, response);
-                return;
+            // Si hay algo que parece un token en la cabecera, intentamos validarlo.
+            if (validarUsoDeToken(request)) {
+                Claims claims = validarToken(request);
+                if (claims.get("authorities") != null) {
+                    crearAutorizacion(claims);
+                } else {
+                    SecurityContextHolder.clearContext();
+                }
             }
-
-            // Si hay algo que parece un token, lo validamos
-            Claims claims = validarToken(request);
-            if (claims.get("authorities") != null) {
-                crearAutorizacion(claims);
-            } else {
-                SecurityContextHolder.clearContext();
-            }
-
-            filterChain.doFilter(request, response);
-        } catch (ExpiredJwtException | UnsupportedJwtException | MalformedJwtException e) {
-            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Token inválido o expirado");
+        } catch (Exception e) {
+            // Si el token es inválido, expirado o malformado, limpiamos el contexto.
+            // No bloqueamos la petición aquí; dejamos que la configuración de HttpSecurity
+            // decida si el recurso solicitado es de libre acceso o requiere autenticación.
+            SecurityContextHolder.clearContext();
         }
+
+        filterChain.doFilter(request, response);
     }
 
     private boolean validarUsoDeToken(HttpServletRequest request) {
