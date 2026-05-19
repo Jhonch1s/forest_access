@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 public interface HistoricoTratamientoRepository
         extends JpaRepository<HistoricoTratamiento, Integer> {
@@ -30,4 +31,7 @@ public interface HistoricoTratamientoRepository
     List<HistoricoTratamiento> findByParcelaAndFechaInicioBetween(
             Parcela parcela, LocalDate desde, LocalDate hasta
     );
+
+    Optional<HistoricoTratamiento> findTopByParcelaIdParcelaAndTratamientoIdTratamientoOrderByFechaFinDesc(
+            Integer idParcela, Integer idTratamiento);
 }

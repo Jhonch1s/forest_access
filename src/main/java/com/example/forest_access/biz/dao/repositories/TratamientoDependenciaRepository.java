@@ -13,6 +13,7 @@ public interface TratamientoDependenciaRepository
     // qué tratamientos debo esperar antes de aplicar este
     List<TratamientoDependencia> findByTratamientoPosterior(Tratamiento tratamiento);
     List<TratamientoDependencia> findByTratamientoPosterior_IdTratamiento(Integer idTratamiento);
+    List<TratamientoDependencia> findByTratamientoPosteriorIdTratamiento(Integer idTratamiento);
 
     // qué tratamientos bloquea este al ser aplicado
     List<TratamientoDependencia> findByTratamientoAnterior(Tratamiento tratamiento);
