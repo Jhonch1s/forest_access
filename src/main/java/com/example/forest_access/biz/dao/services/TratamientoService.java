@@ -18,6 +18,7 @@ public class TratamientoService {
     public List<TratamientoDTO> findAll() {
         return tratamientoRepository.findAll().stream().map(t ->{
             TratamientoDTO tratamiento = new TratamientoDTO();
+            tratamiento.setIdTratamiento(t.getIdTratamiento());
             tratamiento.setNombre(t.getNombre());
             tratamiento.setDescripcion(t.getDescripcion());
             return tratamiento;
@@ -46,11 +47,10 @@ public class TratamientoService {
 
     @Transactional
     public TratamientoDTO delete(Integer idTratamiento) {
-        if (!tratamientoRepository.existsById(idTratamiento)) {
-            throw new RuntimeException("Tratamiento no encontrado con id: " + idTratamiento);
-        }
-        Tratamiento t1 = new Tratamiento();
+        Tratamiento t1 = tratamientoRepository.findById(idTratamiento)
+                .orElseThrow(() -> new RuntimeException("Tratamiento no encontrado con id: " + idTratamiento));
         TratamientoDTO t2 = new TratamientoDTO();
+        t2.setIdTratamiento(t1.getIdTratamiento());
         t2.setNombre(t1.getNombre());
         t2.setDescripcion(t1.getDescripcion());
         tratamientoRepository.deleteById(idTratamiento);
