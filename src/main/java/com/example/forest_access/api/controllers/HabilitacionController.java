@@ -33,4 +33,20 @@ public class HabilitacionController {
 
     }
 
+    @PutMapping("/update/{id}")
+    public ResponseEntity <HabilitacionDTO>  actualizarHabilitacion(
+            @PathVariable Integer id,
+            @RequestBody HabilitacionDTO habilitacion){
+        HabilitacionDTO h = service.updateHabilitacion(id,habilitacion);
+        return ResponseEntity.ok(h);
+    }
+
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<Void>  eliminarHabilitacion(@PathVariable Integer id){
+        service.deleteHabilitacion(id);
+        return ResponseEntity.noContent().build();
+    }
+
+
+
 }
