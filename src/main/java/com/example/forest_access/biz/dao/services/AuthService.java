@@ -50,6 +50,7 @@ public class AuthService {
                 .claim("authorities", perfiles.stream()
                         .map(GrantedAuthority::getAuthority)
                         .collect(Collectors.toList()))
+                .claim("idEmpleado", usuario.getEmpleado() != null ? usuario.getEmpleado().getIdEmpleado() : null)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + 86400000)) // 24 horas
                 .signWith(SignatureAlgorithm.HS256, clave.getBytes())

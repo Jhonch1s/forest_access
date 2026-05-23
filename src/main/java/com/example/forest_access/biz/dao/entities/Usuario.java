@@ -22,5 +22,7 @@ public class Usuario {
     @ManyToMany
     private List<Perfil> perfiles;
 
-
+    @ManyToOne
+    @JoinColumn(name = "id_empleado")
+    private Empleado empleado;
 }
