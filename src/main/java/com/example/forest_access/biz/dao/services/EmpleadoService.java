@@ -11,6 +11,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -107,5 +108,40 @@ public class EmpleadoService {
             res.setNombreCategoria(entidad.getCategoria().getNombre());
         }
         return res;
+    }
+
+    public List<EmpleadoResponse> getAllEmpleadosConDias(){
+        List<Object[]> resultados = repository.findAllEmpleadosWithDiasRestantes();
+        return resultados.stream().map( row ->{
+            EmpleadoResponse response = new EmpleadoResponse();
+
+            // En lugar de (Integer) row[0], usa Number
+            response.setIdEmpleado(((Number) row[0]).intValue());
+            response.setNombre((String) row[1]);
+            response.setCedula((String) row[2]);
+            response.setEmail((String) row[3]);
+            response.setTelefono((String) row[4]);
+
+            // Activo: puede ser Boolean o Integer, pero también podría ser Long (0/1)
+            Object activoObj = row[5];
+            if (activoObj instanceof Boolean) {
+                response.setActivo((Boolean) activoObj);
+            } else if (activoObj instanceof Number) {
+                response.setActivo(((Number) activoObj).intValue() == 1);
+            }
+
+            // Fecha ingreso
+            java.sql.Date sqlDate = (java.sql.Date) row[6];
+            response.setFechaIngreso(sqlDate.toLocalDate());
+
+            // id_categoria: puede ser null o Long
+            response.setIdCategoria(row[7] != null ? ((Number) row[7]).intValue() : null);
+            response.setNombreCategoria((String) row[8]);
+
+            // dias_restantes: puede ser null o Long
+            response.setDiasRestantes(row[9] != null ? ((Number) row[9]).intValue() : null);
+
+            return response;
+        }).collect(Collectors.toList());
     }
 }

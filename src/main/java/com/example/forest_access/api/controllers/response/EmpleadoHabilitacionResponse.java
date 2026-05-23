@@ -6,6 +6,8 @@ import java.time.LocalDate;
 
 @Data
 public class EmpleadoHabilitacionResponse {
+    private Integer idEmpleado;
+    private Integer idHabilitacion;
     private String nombreEmpleado;
     private String nombreHabilitacion;
     private LocalDate fechaEmision;

@@ -19,7 +19,7 @@ public class EmpleadoController {
 
     @GetMapping
     public ResponseEntity<List<EmpleadoResponse>> findAll() {
-        return ResponseEntity.ok(service.findAll());
+        return ResponseEntity.ok(service.getAllEmpleadosConDias());
     }
 
     @GetMapping("/{id}")

@@ -15,4 +15,5 @@ public class EmpleadoResponse {
     private Boolean activo;
     private Integer idCategoria;
     private String nombreCategoria;
+    private Integer diasRestantes;
 }

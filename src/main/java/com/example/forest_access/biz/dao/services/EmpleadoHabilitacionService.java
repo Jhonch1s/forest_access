@@ -14,11 +14,13 @@ import com.example.forest_access.biz.dao.repositories.HabilitacionRepository;
 import com.example.forest_access.dto.EmpleadoHabilitacionDTO;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @AllArgsConstructor
@@ -41,6 +43,8 @@ public class EmpleadoHabilitacionService {
 
         return empleadoHabilitacionRepository.findAll().stream().map( eh ->{
             EmpleadoHabilitacionResponse empleadohabilitacion = new EmpleadoHabilitacionResponse();
+            empleadohabilitacion.setIdEmpleado(eh.getEmpleado().getIdEmpleado());
+            empleadohabilitacion.setIdHabilitacion(eh.getHabilitacion().getIdHabilitacion());
             empleadohabilitacion.setNombreEmpleado(eh.getEmpleado().getNombre());
             empleadohabilitacion.setNombreHabilitacion(eh.getHabilitacion().getNombre());
             empleadohabilitacion.setFechaEmision(eh.getFechaEmision());
@@ -59,12 +63,15 @@ public class EmpleadoHabilitacionService {
         Habilitacion habilitacion = habilitacionrepository.findById(relacion.getIdHabilitacion())
                 .orElseThrow(() -> new RuntimeException("No existe la habilitacion"));
         EmpleadoHabilitacionId id =  new EmpleadoHabilitacionId(relacion.getIdEmpleado(),relacion.getIdHabilitacion());
-        EmpleadoHabilitacion eh = findById(id);
-        if(eh != null){
+        boolean existe = empleadoHabilitacionRepository.existsById(id);
+        if(existe){
+            EmpleadoHabilitacion eh = findById(id);
             throw new RuntimeException("Esa habilitacion para el empleado: " + eh.getEmpleado().getNombre()+ " ya existe");
         }else{
             EmpleadoHabilitacion nuevaEH = new EmpleadoHabilitacion();
 
+            EmpleadoHabilitacionId id1 = new EmpleadoHabilitacionId(relacion.getIdEmpleado(),relacion.getIdHabilitacion());
+            nuevaEH.setId(id1);
             nuevaEH.setEmpleado(empleado);
             nuevaEH.setHabilitacion(habilitacion);
             nuevaEH.setFechaEmision(relacion.getFechaEmision());
@@ -75,6 +82,31 @@ public class EmpleadoHabilitacionService {
 
 
     }
+    @Transactional
+    public EmpleadoHabilitacionResponse updateHabilitacionEmp(Integer idEmp,Integer idHab, EmpleadoHabilitacionDTO relacion){
+        if(idEmp == null || idHab == null ){
+            throw new RuntimeException("Id de empleado o habilitacion vacios");
+        }
+        Empleado empleado = empleadorepository.findById(idEmp)
+                .orElseThrow(() -> new RuntimeException("No existe el empleado"));
+        Habilitacion habilitacion = habilitacionrepository.findById(idHab)
+                .orElseThrow(() -> new RuntimeException("No existe la habilitacion"));
+        EmpleadoHabilitacionId id1 = new EmpleadoHabilitacionId(idEmp,idHab);
+        EmpleadoHabilitacion nuevaEH = empleadoHabilitacionRepository.findById(id1)
+                        .orElseThrow( () -> new RuntimeException("No existe la relacion"));
+        nuevaEH.setEmpleado(empleado);
+        nuevaEH.setHabilitacion(habilitacion);
+        nuevaEH.setFechaEmision(relacion.getFechaEmision());
+        nuevaEH.setFechaVencimiento(relacion.getFechaVencimiento());
+        empleadoHabilitacionRepository.save(nuevaEH);
+        EmpleadoHabilitacionResponse resp = new EmpleadoHabilitacionResponse();
+        BeanUtils.copyProperties(nuevaEH, resp);
+        resp.setNombreEmpleado(empleado.getNombre());
+        resp.setNombreHabilitacion(habilitacion.getNombre());
+        return resp;
+
+    }
+
 
     @Transactional
     public EmpleadoHabilitacionResponse deleteHabilitacionEmp(EmpleadoHabilitacionId id){
@@ -83,12 +115,30 @@ public class EmpleadoHabilitacionService {
         }
         EmpleadoHabilitacion emphab = findById(id);
         EmpleadoHabilitacionResponse emphab1 = new EmpleadoHabilitacionResponse();
+        emphab1.setIdEmpleado(emphab.getEmpleado().getIdEmpleado());
+        emphab1.setIdHabilitacion(emphab.getHabilitacion().getIdHabilitacion());
         emphab1.setNombreEmpleado(emphab.getEmpleado().getNombre());
         emphab1.setNombreHabilitacion(emphab.getHabilitacion().getNombre());
         emphab1.setFechaEmision(emphab.getFechaEmision());
         emphab1.setFechaVencimiento(emphab.getFechaVencimiento());
         empleadoHabilitacionRepository.deleteById(id);
         return emphab1;
+    }
+
+    @Transactional
+    public List<EmpleadoHabilitacionResponse> getHabilitacionesEmpleado(Integer id){
+        return empleadoHabilitacionRepository.findAll().stream()
+                .filter( he -> Objects.equals(he.getEmpleado().getIdEmpleado(), id))
+                .map( he ->{
+                    EmpleadoHabilitacionResponse emphab1 = new EmpleadoHabilitacionResponse();
+                    emphab1.setIdEmpleado(he.getEmpleado().getIdEmpleado());
+                    emphab1.setIdHabilitacion(he.getHabilitacion().getIdHabilitacion());
+                    emphab1.setNombreEmpleado(he.getEmpleado().getNombre());
+                    emphab1.setNombreHabilitacion(he.getHabilitacion().getNombre());
+                    emphab1.setFechaEmision(he.getFechaEmision());
+                    emphab1.setFechaVencimiento(he.getFechaVencimiento());
+                    return emphab1;
+                }).toList();
     }
 
 }

@@ -39,12 +39,25 @@ public class EmpleadoHabilitacionController {
         return ResponseEntity.created(location).body(ehr);
     }
 
-    @DeleteMapping("/delete")
-    public ResponseEntity<EmpleadoHabilitacionResponse> borrarEmpleadoHabilitacion(@RequestParam Integer idEmpleado,
-                                                           @RequestParam Integer idHabilitacion){
-        EmpleadoHabilitacionId id = new EmpleadoHabilitacionId(idEmpleado, idHabilitacion);
-        EmpleadoHabilitacionResponse EH = service.deleteHabilitacionEmp(id);
+    @PutMapping("/update/{idEmp}/{idHab}")
+    public ResponseEntity<EmpleadoHabilitacionResponse> actualizarRelacion(@PathVariable Integer idEmp,
+                                                                           @PathVariable Integer idHab,
+                                                                           @RequestBody  EmpleadoHabilitacionDTO empHab){
+        EmpleadoHabilitacionResponse emphab = service.updateHabilitacionEmp(idEmp,idHab,empHab);
+        return ResponseEntity.ok(emphab);
+    }
+
+    @DeleteMapping("/delete/{id}/{idHabilitacion}")
+    public ResponseEntity<EmpleadoHabilitacionResponse> borrarEmpleadoHabilitacion(@PathVariable Integer id,
+                                                           @PathVariable Integer idHabilitacion){
+        EmpleadoHabilitacionId idEmpHab = new EmpleadoHabilitacionId(id, idHabilitacion);
+        EmpleadoHabilitacionResponse EH = service.deleteHabilitacionEmp(idEmpHab);
         return ResponseEntity.ok(EH);
+    }
+
+    @GetMapping("/empleado/{id}")
+    public ResponseEntity<List<EmpleadoHabilitacionResponse>> obtenerHabilitacionesEmpleado(@PathVariable Integer id){
+        return ResponseEntity.ok(service.getHabilitacionesEmpleado(id));
     }
 
 
