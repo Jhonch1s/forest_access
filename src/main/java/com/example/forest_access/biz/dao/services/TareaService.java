@@ -1,9 +1,10 @@
 package com.example.forest_access.biz.dao.services;
 
+import com.example.forest_access.api.controllers.request.TareaRequest;
 import com.example.forest_access.api.controllers.response.TareaResponse;
 import com.example.forest_access.biz.dao.entities.*;
 import com.example.forest_access.biz.dao.repositories.*;
-import com.example.forest_access.dto.TareaDTO;
+import com.example.forest_access.enums.EstadoAsignacion;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,8 +22,7 @@ public class TareaService {
     private final EmpleadoRepository empleadoRepository;
     private final EstadoRepository estadoRepository;
     private final CatalogoTareaRepository catalogoRepository;
-    private final PlantillaTareaRepository plantillaRepository;
-    private final HistoricoTratamientoRepository historicoRepository;
+    private final AsignacionTratamientoRepository asignacionRepository;
 
     @Transactional(readOnly = true)
     public List<TareaResponse> findAll() {
@@ -37,18 +37,28 @@ public class TareaService {
     }
 
     @Transactional
-    public TareaResponse create(TareaDTO dto) {
+    public TareaResponse create(TareaRequest req) {
         Tarea nueva = new Tarea();
-        nueva.setFechaCreacion(LocalDate.now());
-        updateEntityFromDTO(nueva, dto);
-        return mapToResponse(repository.save(nueva));
+        nueva.setFecha(req.getFecha() != null ? req.getFecha() : LocalDate.now());
+        updateEntityFromRequest(nueva, req);
+        Tarea guardada = repository.save(nueva);
+
+        // Auto-transición: PLANIFICADO → EN_EJECUCION
+        if (guardada.getAsignacionTratamiento() != null
+                && guardada.getAsignacionTratamiento().getEstado() == EstadoAsignacion.PLANIFICADO) {
+            AsignacionTratamiento asignacion = guardada.getAsignacionTratamiento();
+            asignacion.setEstado(EstadoAsignacion.EN_EJECUCION);
+            asignacionRepository.save(asignacion);
+        }
+
+        return mapToResponse(guardada);
     }
 
     @Transactional
-    public TareaResponse update(Integer id, TareaDTO dto) {
+    public TareaResponse update(Integer id, TareaRequest req) {
         Tarea existente = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Tarea no encontrada"));
-        updateEntityFromDTO(existente, dto);
+        updateEntityFromRequest(existente, req);
         return mapToResponse(repository.save(existente));
     }
 
@@ -65,49 +75,47 @@ public class TareaService {
     }
 
     @Transactional(readOnly = true)
-    public List<TareaResponse> findParaLiquidacion(Integer idEmpleado, LocalDate inicio, LocalDate fin) {
-        Empleado e = empleadoRepository.findById(idEmpleado)
-                .orElseThrow(() -> new EntityNotFoundException("Empleado no encontrado"));
-        return repository.findByEmpleadoAndFechaFinalizacionBetween(e, inicio, fin).stream()
+    public List<TareaResponse> findPorAsignacion(Long idAsignacion) {
+        return repository.findByAsignacionTratamiento_IdAsignacion(idAsignacion).stream()
                 .map(this::mapToResponse).collect(Collectors.toList());
     }
 
-    private void updateEntityFromDTO(Tarea entidad, TareaDTO dto) {
-        entidad.setDescripcion(dto.getDescripcion());
-        entidad.setObservaciones(dto.getObservaciones());
-        entidad.setHoras(dto.getHoras());
-        entidad.setFechaInicio(dto.getFechaInicio());
-        entidad.setFechaFinEstimada(dto.getFechaFinEstimada());
-        entidad.setFechaFinalizacion(dto.getFechaFinalizacion());
+    @Transactional(readOnly = true)
+    public List<TareaResponse> findParaLiquidacion(Integer idEmpleado, LocalDate inicio, LocalDate fin) {
+        Empleado e = empleadoRepository.findById(idEmpleado)
+                .orElseThrow(() -> new EntityNotFoundException("Empleado no encontrado"));
+        return repository.findByEmpleadoAndFechaBetween(e, inicio, fin).stream()
+                .map(this::mapToResponse).collect(Collectors.toList());
+    }
 
-        if (dto.getEmpleado() != null && dto.getEmpleado().getIdEmpleado() != null) {
-            entidad.setEmpleado(empleadoRepository.findById(dto.getEmpleado().getIdEmpleado()).orElse(null));
+    private void updateEntityFromRequest(Tarea entidad, TareaRequest req) {
+        entidad.setDescripcion(req.getDescripcion());
+        entidad.setObservaciones(req.getObservaciones());
+        entidad.setHoras(req.getHoras());
+        entidad.setFecha(req.getFecha());
+
+        if (req.getIdEmpleado() != null) {
+            entidad.setEmpleado(empleadoRepository.findById(req.getIdEmpleado()).orElse(null));
         } else {
             entidad.setEmpleado(null);
         }
 
-        if (dto.getEstado() != null && dto.getEstado().getIdEstado() != null) {
-            entidad.setEstado(estadoRepository.findById(dto.getEstado().getIdEstado()).orElse(null));
+        if (req.getIdEstado() != null) {
+            entidad.setEstado(estadoRepository.findById(req.getIdEstado()).orElse(null));
         } else {
             entidad.setEstado(null);
         }
 
-        if (dto.getCatalogoTarea() != null && dto.getCatalogoTarea().getIdCatalogoTarea() != null) {
-            entidad.setCatalogoTarea(catalogoRepository.findById(dto.getCatalogoTarea().getIdCatalogoTarea()).orElse(null));
+        if (req.getIdCatalogoTarea() != null) {
+            entidad.setCatalogoTarea(catalogoRepository.findById(req.getIdCatalogoTarea()).orElse(null));
         } else {
             entidad.setCatalogoTarea(null);
         }
 
-        if (dto.getPlantilla() != null && dto.getPlantilla().getIdPlantilla() != null) {
-            entidad.setPlantilla(plantillaRepository.findById(dto.getPlantilla().getIdPlantilla()).orElse(null));
+        if (req.getIdAsignacion() != null) {
+            entidad.setAsignacionTratamiento(asignacionRepository.findById(Long.valueOf(req.getIdAsignacion())).orElse(null));
         } else {
-            entidad.setPlantilla(null);
-        }
-
-        if (dto.getHistoricoTratamiento() != null && dto.getHistoricoTratamiento().getIdHistorico() != null) {
-            entidad.setHistoricoTratamiento(historicoRepository.findById(dto.getHistoricoTratamiento().getIdHistorico()).orElse(null));
-        } else {
-            entidad.setHistoricoTratamiento(null);
+            entidad.setAsignacionTratamiento(null);
         }
     }
 
@@ -116,11 +124,24 @@ public class TareaService {
         res.setIdTarea(t.getIdTarea());
         res.setDescripcion(t.getDescripcion());
         res.setHoras(t.getHoras());
-        res.setFechaFinalizacion(t.getFechaFinalizacion());
+        res.setFecha(t.getFecha());
+        res.setObservaciones(t.getObservaciones());
 
-        if (t.getEmpleado() != null) res.setNombreEmpleado(t.getEmpleado().getNombre());
-        if (t.getEstado() != null) res.setNombreEstado(t.getEstado().getNombre());
-        if (t.getCatalogoTarea() != null) res.setNombreTareaCatalogo(t.getCatalogoTarea().getNombre());
+        if (t.getAsignacionTratamiento() != null) {
+            res.setIdAsignacion(Math.toIntExact(t.getAsignacionTratamiento().getIdAsignacion()));
+        }
+        if (t.getEmpleado() != null) {
+            res.setIdEmpleado(t.getEmpleado().getIdEmpleado());
+            res.setNombreEmpleado(t.getEmpleado().getNombre());
+        }
+        if (t.getEstado() != null) {
+            res.setIdEstado(t.getEstado().getIdEstado());
+            res.setNombreEstado(t.getEstado().getNombre());
+        }
+        if (t.getCatalogoTarea() != null) {
+            res.setIdCatalogoTarea(t.getCatalogoTarea().getIdCatalogoTarea());
+            res.setNombreTareaCatalogo(t.getCatalogoTarea().getNombre());
+        }
 
         return res;
     }

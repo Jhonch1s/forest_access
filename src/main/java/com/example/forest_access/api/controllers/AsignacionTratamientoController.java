@@ -48,7 +48,6 @@ public class AsignacionTratamientoController {
 
     @PutMapping("/{id}/iniciar")
     public ResponseEntity<AsignacionTratamientoResponse> iniciarEjecucion(@PathVariable Long id) {
-        // Cambia estado a EN_EJECUCION y opcionalmente crea un HistoricoTratamiento preliminar
         return ResponseEntity.ok(service.iniciarEjecucion(id));
     }
 }

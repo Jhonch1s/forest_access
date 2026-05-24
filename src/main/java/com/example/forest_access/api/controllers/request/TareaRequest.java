@@ -8,15 +8,11 @@ import java.math.BigDecimal;
 public class TareaRequest {
     private String descripcion;
     private String observaciones;
-    private java.math.BigDecimal horas;
-    private LocalDate fechaInicio;
-    private LocalDate fechaFinEstimada;
-    private LocalDate fechaFinalizacion;
+    private BigDecimal horas;
+    private LocalDate fecha;
 
-    // IDs para las relaciones
+    private Integer idAsignacion;
     private Integer idEmpleado;
     private Integer idEstado;
     private Integer idCatalogoTarea;
-    private Integer idPlantilla;
-    private Integer idHistoricoTratamiento;
 }

@@ -1,8 +1,8 @@
 package com.example.forest_access.biz.dao.repositories;
 
+import com.example.forest_access.biz.dao.entities.AsignacionTratamiento;
 import com.example.forest_access.biz.dao.entities.Empleado;
 import com.example.forest_access.biz.dao.entities.Estado;
-import com.example.forest_access.biz.dao.entities.HistoricoTratamiento;
 import com.example.forest_access.biz.dao.entities.Tarea;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -17,19 +17,10 @@ public interface TareaRepository extends JpaRepository<Tarea, Integer> {
     List<Tarea> findByEstado(Estado estado);
     List<Tarea> findByEstado_Nombre(String nombreEstado);
 
-    List<Tarea> findByHistoricoTratamiento(HistoricoTratamiento historico);
-    List<Tarea> findByHistoricoTratamiento_IdHistorico(Integer idHistorico);
+    List<Tarea> findByAsignacionTratamiento(AsignacionTratamiento asignacion);
+    List<Tarea> findByAsignacionTratamiento_IdAsignacion(Long idAsignacion);
 
-    // tareas de un empleado en un período, útil para liquidación
-    List<Tarea> findByEmpleadoAndFechaFinalizacionBetween(
-            Empleado empleado, LocalDate desde, LocalDate hasta
-    );
+    List<Tarea> findByEmpleadoAndFechaBetween(Empleado empleado, LocalDate desde, LocalDate hasta);
 
-    // tareas pendientes o en curso de un empleado
-    List<Tarea> findByEmpleadoAndEstado_NombreIn(
-            Empleado empleado, List<String> estados
-    );
-
-    // tareas de una parcela a través del histórico
-    List<Tarea> findByHistoricoTratamiento_Parcela_IdParcela(Integer idParcela);
+    List<Tarea> findByEmpleadoAndEstado_NombreIn(Empleado empleado, List<String> estados);
 }

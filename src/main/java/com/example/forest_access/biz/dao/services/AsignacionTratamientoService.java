@@ -23,7 +23,6 @@ public class AsignacionTratamientoService {
     private final RodalRepository rodalRepo;
     private final TratamientoRepository tratamientoRepo;
     private final TratamientoDependenciaRepository dependenciaRepo;
-    private final HistoricoTratamientoRepository historicoRepo;
 
     public List<AsignacionTratamientoResponse> getAll() {
         return asignacionRepo.findAll().stream().map(this::toResponse).toList();
@@ -91,7 +90,6 @@ public class AsignacionTratamientoService {
             int diasMinimos = dep.getDiasEsperaMinimo();
 
             // Verificar si el tratamiento anterior fue completado en esta parcela
-            // Buscar en HistoricoTratamiento (ejecutado) o AsignacionTratamiento (planificado y completado)
             LocalDate fechaEjecucionAnterior = buscarFechaCompletado(parcela.getIdParcela(), idTratamientoAnterior);
 
             if (fechaEjecucionAnterior == null) {
@@ -110,14 +108,6 @@ public class AsignacionTratamientoService {
     }
 
     private LocalDate buscarFechaCompletado(Integer idParcela, Integer idTratamiento) {
-        // Primero buscar en HistoricoTratamiento (ya ejecutado)
-        Optional<HistoricoTratamiento> historico = historicoRepo
-                .findTopByParcelaIdParcelaAndTratamientoIdTratamientoOrderByFechaFinDesc(
-                        idParcela, idTratamiento);
-
-        if (historico.isPresent()) return historico.get().getFechaFin();
-
-        // Luego buscar en AsignacionTratamiento completada
         Optional<AsignacionTratamiento> asignacion = asignacionRepo
                 .findTopByParcelaIdParcelaAndTratamientoIdTratamientoAndEstadoOrderByFechaFinEstimadaDesc(
                         idParcela, idTratamiento, EstadoAsignacion.COMPLETADO);

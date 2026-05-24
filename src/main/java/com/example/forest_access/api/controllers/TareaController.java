@@ -1,8 +1,8 @@
 package com.example.forest_access.api.controllers;
 
+import com.example.forest_access.api.controllers.request.TareaRequest;
 import com.example.forest_access.api.controllers.response.TareaResponse;
 import com.example.forest_access.biz.dao.services.TareaService;
-import com.example.forest_access.dto.TareaDTO;
 import lombok.AllArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -24,15 +24,36 @@ public class TareaController {
         return ResponseEntity.ok(service.findAll());
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<TareaResponse> findById(@PathVariable Integer id) {
+        return ResponseEntity.ok(service.findById(id));
+    }
+
     @PostMapping("/create")
-    public ResponseEntity<TareaResponse> create(@RequestBody TareaDTO dto) {
-        TareaResponse creada = service.create(dto);
+    public ResponseEntity<TareaResponse> create(@RequestBody TareaRequest request) {
+        TareaResponse creada = service.create(request);
         return ResponseEntity.created(URI.create("/api/tareas/" + creada.getIdTarea())).body(creada);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<TareaResponse> update(@PathVariable Integer id, @RequestBody TareaDTO dto) {
-        return ResponseEntity.ok(service.update(id, dto));
+    public ResponseEntity<TareaResponse> update(@PathVariable Integer id, @RequestBody TareaRequest request) {
+        return ResponseEntity.ok(service.update(id, request));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Integer id) {
+        service.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/empleado/{idEmpleado}")
+    public ResponseEntity<List<TareaResponse>> findByEmpleado(@PathVariable Integer idEmpleado) {
+        return ResponseEntity.ok(service.findPorEmpleado(idEmpleado));
+    }
+
+    @GetMapping("/asignacion/{idAsignacion}")
+    public ResponseEntity<List<TareaResponse>> findByAsignacion(@PathVariable Long idAsignacion) {
+        return ResponseEntity.ok(service.findPorAsignacion(idAsignacion));
     }
 
     @GetMapping("/liquidacion")
