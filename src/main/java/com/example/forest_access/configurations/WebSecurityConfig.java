@@ -26,13 +26,7 @@ public class WebSecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable) // Desactiva CSRF para APIs
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/api/**",
-                                "/swagger-ui/**",
-                                "/swagger-ui.html",
-                                "/v3/api-docs/**"
-                        ).permitAll() // Estas rutas NO deberían pedir Token
-                        .anyRequest().authenticated()
+                        .anyRequest().permitAll()
                 )
                 // Agregamos el filtro de JWT
                 .addFilterBefore(new SeguridadConfig(jwtSecret), UsernamePasswordAuthenticationFilter.class);
