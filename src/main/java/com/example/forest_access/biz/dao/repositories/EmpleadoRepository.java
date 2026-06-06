@@ -14,11 +14,11 @@ public interface EmpleadoRepository extends JpaRepository<Empleado, Integer> {
     List<Empleado> findByActivo(Boolean activo);
     List<Empleado> findByCategoria(CategoriaEmpleado categoria);
 
-    @Query(value = "SELECT e.id_empleado, e.nombre, e.cedula, e.email, e.telefono, e.activo, e.fecha_ingreso, e.id_categoria,c.nombre, " +
-            "MIN(DATEDIFF(eh.fecha_vencimiento, CURDATE())) AS dias_restantes " +
+    @Query(value = "SELECT e.id_empleado, e.nombre, e.cedula, e.email, e.telefono, e.activo, e.fecha_ingreso, e.id_categoria, c.nombre, " +
+            "COALESCE(MIN(eh.fecha_vencimiento - CURRENT_DATE), 999) AS dias_restantes " +
             "FROM empleado e " +
-            "LEFT JOIN categoria_empleado c ON e.id_categoria = c.id_categoria "+
+            "LEFT JOIN categoria_empleado c ON e.id_categoria = c.id_categoria " +
             "LEFT JOIN empleado_habilitacion eh ON e.id_empleado = eh.id_empleado " +
-            "GROUP BY e.id_empleado", nativeQuery = true)
+            "GROUP BY e.id_empleado, c.nombre", nativeQuery = true)
     List<Object[]> findAllEmpleadosWithDiasRestantes();
 }

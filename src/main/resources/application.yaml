@@ -12,7 +12,11 @@ spring:
     url: ${DB_URL}
     username: ${USERNAME}
     password: ${PASSWORD}
-    driverClassName: com.mysql.cj.jdbc.Driver
+    driverClassName: org.postgresql.Driver
+    hikari:
+      data-source-properties:
+        prepareThreshold: 0
+        preparedStatementCacheQueries: 0
   jpa:
     hibernate:
       ddl-auto: update
@@ -22,4 +26,4 @@ spring:
         order_updates: true
         order_inserts: true
     show_sql: true
-    database-platform: org.hibernate.dialect.MySQLDialect
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
