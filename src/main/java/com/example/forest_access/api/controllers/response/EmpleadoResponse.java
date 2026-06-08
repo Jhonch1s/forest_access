@@ -16,4 +16,5 @@ public class EmpleadoResponse {
     private Integer idCategoria;
     private String nombreCategoria;
     private Integer diasRestantes;
+    private String imagenUrl;
 }
