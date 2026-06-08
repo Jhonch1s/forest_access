@@ -39,6 +39,9 @@ public class Empleado {
     @Column(nullable = false)
     private Boolean activo = true;
 
+    @Column(nullable = true, name="imagen_url")
+    private String imagenUrl;
+
     @ManyToOne
     @JoinColumn(name = "id_categoria")
     private CategoriaEmpleado categoria;

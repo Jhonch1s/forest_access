@@ -1,6 +1,7 @@
 package com.example.forest_access.api.controllers;
 
 import com.example.forest_access.api.controllers.response.EmpleadoResponse;
+import com.example.forest_access.api.controllers.response.PaginadoEmpleado;
 import com.example.forest_access.biz.dao.services.EmpleadoService;
 import com.example.forest_access.dto.EmpleadoDTO;
 import lombok.AllArgsConstructor;
@@ -20,6 +21,13 @@ public class EmpleadoController {
     @GetMapping
     public ResponseEntity<List<EmpleadoResponse>> findAll() {
         return ResponseEntity.ok(service.getAllEmpleadosConDias());
+    }
+
+    @GetMapping("/paginado/{offset}/{limite}/{filtro}")
+    public ResponseEntity<PaginadoEmpleado> findAllPaginado(@PathVariable Integer offset,
+                                                            @PathVariable Integer limite,
+                                                            @PathVariable Boolean filtro) {
+        return ResponseEntity.ok(service.obtenerEmpleadosPaginados(offset,limite,filtro));
     }
 
     @GetMapping("/{id}")

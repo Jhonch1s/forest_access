@@ -13,4 +13,5 @@ public class EmpleadoDTO {
     private LocalDate fechaIngreso;
     private Boolean activo;
     private Integer idCategoria;
+    private String imagenUrl;
 }
