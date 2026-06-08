@@ -4,14 +4,21 @@ import com.example.forest_access.api.controllers.request.TareaRequest;
 import com.example.forest_access.api.controllers.response.TareaResponse;
 import com.example.forest_access.biz.dao.entities.*;
 import com.example.forest_access.biz.dao.repositories.*;
+import com.example.forest_access.dto.ReporteEmpleadoDTO;
+import com.example.forest_access.dto.ReporteHabilitacionDTO;
+import com.example.forest_access.dto.ReporteTareaDTO;
 import com.example.forest_access.enums.EstadoAsignacion;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -23,6 +30,7 @@ public class TareaService {
     private final EstadoRepository estadoRepository;
     private final CatalogoTareaRepository catalogoRepository;
     private final AsignacionTratamientoRepository asignacionRepository;
+    private final EmpleadoHabilitacionRepository empleadoHabilitacionRepository;
 
     @Transactional(readOnly = true)
     public List<TareaResponse> findAll() {
@@ -86,6 +94,89 @@ public class TareaService {
                 .orElseThrow(() -> new EntityNotFoundException("Empleado no encontrado"));
         return repository.findByEmpleadoAndFechaBetween(e, inicio, fin).stream()
                 .map(this::mapToResponse).collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<ReporteEmpleadoDTO> getReporteBatch(LocalDate inicio, LocalDate hasta) {
+        List<Object[]> empleadosData = empleadoRepository.findAllActiveWithCategoria();
+        List<Tarea> tareasData = repository.findByFechaBetween(inicio, hasta);
+        List<EmpleadoHabilitacion> habsData = empleadoHabilitacionRepository.findAll();
+
+        Map<Integer, ReporteEmpleadoDTO> reporteMap = new LinkedHashMap<>();
+
+        for (Object[] row : empleadosData) {
+            Integer id = ((Number) row[0]).intValue();
+            ReporteEmpleadoDTO dto = new ReporteEmpleadoDTO();
+            dto.setIdEmpleado(id);
+            dto.setNombre((String) row[1]);
+            dto.setCedula((String) row[2]);
+            dto.setNombreCategoria((String) row[3]);
+            dto.setValorJornal(row[4] != null ? (BigDecimal) row[4] : BigDecimal.ZERO);
+            dto.setTotalHoras(BigDecimal.ZERO);
+            dto.setTotalTareas(0);
+            dto.setTareas(new ArrayList<>());
+            dto.setHabilitaciones(new ArrayList<>());
+            reporteMap.put(id, dto);
+        }
+
+        // Agrupar tareas por idEmpleado y luego por nombre de catálogo
+        Map<Integer, Map<String, List<Tarea>>> tareasAgrupadas = tareasData.stream()
+                .filter(t -> t.getEmpleado() != null && t.getCatalogoTarea() != null)
+                .collect(Collectors.groupingBy(
+                        t -> t.getEmpleado().getIdEmpleado(),
+                        Collectors.groupingBy(t -> t.getCatalogoTarea().getNombre())
+                ));
+
+        // Calcular días trabajados distintos por empleado
+        Map<Integer, Long> diasTrabajadosMap = tareasData.stream()
+                .filter(t -> t.getEmpleado() != null && t.getFecha() != null)
+                .collect(Collectors.groupingBy(
+                        t -> t.getEmpleado().getIdEmpleado(),
+                        Collectors.mapping(Tarea::getFecha, Collectors.collectingAndThen(Collectors.toSet(), set -> (long) set.size()))
+                ));
+
+        // Llenar tareas por catálogo para cada empleado
+        tareasAgrupadas.forEach((idEmpleado, catalogoMap) -> {
+            ReporteEmpleadoDTO dto = reporteMap.get(idEmpleado);
+            if (dto != null) {
+                catalogoMap.forEach((nombreCatalogo, listaTareas) -> {
+                    ReporteTareaDTO rtd = new ReporteTareaDTO();
+                    rtd.setNombreCatalogo(nombreCatalogo);
+                    rtd.setCantidad(listaTareas.size());
+
+                    BigDecimal horasTotal = listaTareas.stream()
+                            .map(Tarea::getHoras)
+                            .filter(h -> h != null)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+                    rtd.setHoras(horasTotal);
+
+                    dto.getTareas().add(rtd);
+                    dto.setTotalTareas(dto.getTotalTareas() + rtd.getCantidad());
+                    dto.setTotalHoras(dto.getTotalHoras().add(rtd.getHoras()));
+                });
+            }
+        });
+
+        // Llenar días trabajados para cada empleado
+        diasTrabajadosMap.forEach((idEmpleado, dias) -> {
+            ReporteEmpleadoDTO dto = reporteMap.get(idEmpleado);
+            if (dto != null) {
+                dto.setDiasTrabajados(dias.intValue());
+            }
+        });
+
+        for (EmpleadoHabilitacion eh : habsData) {
+            Integer idEmpleado = eh.getEmpleado().getIdEmpleado();
+            ReporteEmpleadoDTO dto = reporteMap.get(idEmpleado);
+            if (dto == null) continue;
+
+            ReporteHabilitacionDTO hab = new ReporteHabilitacionDTO();
+            hab.setNombreHabilitacion(eh.getHabilitacion().getNombre());
+            hab.setFechaVencimiento(eh.getFechaVencimiento());
+            dto.getHabilitaciones().add(hab);
+        }
+
+        return new ArrayList<>(reporteMap.values());
     }
 
     private void updateEntityFromRequest(Tarea entidad, TareaRequest req) {

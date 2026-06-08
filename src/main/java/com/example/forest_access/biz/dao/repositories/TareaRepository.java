@@ -4,7 +4,10 @@ import com.example.forest_access.biz.dao.entities.AsignacionTratamiento;
 import com.example.forest_access.biz.dao.entities.Empleado;
 import com.example.forest_access.biz.dao.entities.Estado;
 import com.example.forest_access.biz.dao.entities.Tarea;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -23,4 +26,7 @@ public interface TareaRepository extends JpaRepository<Tarea, Integer> {
     List<Tarea> findByEmpleadoAndFechaBetween(Empleado empleado, LocalDate desde, LocalDate hasta);
 
     List<Tarea> findByEmpleadoAndEstado_NombreIn(Empleado empleado, List<String> estados);
-}
+
+    @EntityGraph(attributePaths = {"empleado", "catalogoTarea"})
+    List<Tarea> findByFechaBetween(LocalDate desde, LocalDate hasta);
+}       

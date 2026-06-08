@@ -3,7 +3,11 @@ package com.example.forest_access.api.controllers;
 import com.example.forest_access.api.controllers.request.TareaRequest;
 import com.example.forest_access.api.controllers.response.TareaResponse;
 import com.example.forest_access.biz.dao.services.TareaService;
+import com.example.forest_access.dto.ReporteEmpleadoDTO;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -62,5 +66,22 @@ public class TareaController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate inicio,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta) {
         return ResponseEntity.ok(service.findParaLiquidacion(idEmpleado, inicio, hasta));
+    }
+
+    @GetMapping("/reporte-batch")
+    public ResponseEntity<?> getReporteBatch(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate inicio,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size) {
+        List<ReporteEmpleadoDTO> fullList = service.getReporteBatch(inicio, hasta);
+        if (page != null && size != null && size > 0) {
+            int start = page * size;
+            int end = Math.min(start + size, fullList.size());
+            List<ReporteEmpleadoDTO> content = start >= fullList.size() ? List.of() : fullList.subList(start, end);
+            Page<ReporteEmpleadoDTO> pageResult = new PageImpl<>(content, PageRequest.of(page, size), fullList.size());
+            return ResponseEntity.ok(pageResult);
+        }
+        return ResponseEntity.ok(fullList);
     }
 }

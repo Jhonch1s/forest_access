@@ -21,4 +21,10 @@ public interface EmpleadoRepository extends JpaRepository<Empleado, Integer> {
             "LEFT JOIN empleado_habilitacion eh ON e.id_empleado = eh.id_empleado " +
             "GROUP BY e.id_empleado, c.nombre", nativeQuery = true)
     List<Object[]> findAllEmpleadosWithDiasRestantes();
+
+    @Query(value = "SELECT e.id_empleado, e.nombre, e.cedula, c.nombre, c.valor_jornal " +
+            "FROM empleado e " +
+            "LEFT JOIN categoria_empleado c ON e.id_categoria = c.id_categoria " +
+            "WHERE e.activo = true", nativeQuery = true)
+    List<Object[]> findAllActiveWithCategoria();
 }
