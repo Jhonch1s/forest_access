@@ -27,9 +27,6 @@ import java.util.stream.Stream;
 @AllArgsConstructor
 public class EmpleadoService {
 
-    private final String cloud_name = System.getenv("CLOUD_NAME");
-    private final String api_key = System.getenv("API_KEY");
-    private final String api_secret = System.getenv("API_SECRET");
     private final EmpleadoRepository repository;
     private final CategoriaEmpleadoRepository categoriaRepository;
 
@@ -83,7 +80,7 @@ public class EmpleadoService {
                 if(filtro != null && filtro ){
                     stream = stream.sorted(
                             Comparator.comparing(EmpleadoResponse::getDiasRestantes,
-                                            Comparator.nullsLast(Comparator.reverseOrder()))
+                                            Comparator.nullsLast(Comparator.naturalOrder()))
                                     .thenComparing(EmpleadoResponse::getIdEmpleado)
                     );
                 }
@@ -115,26 +112,7 @@ public class EmpleadoService {
         Empleado nuevo = new Empleado();
         updateEntityFromDTO(nuevo, dto);
 
-        if(dto.getImagenUrl() != null){
-            Cloudinary cloudinary = new Cloudinary(ObjectUtils.asMap(
-                    "cloud_name", cloud_name,
-                    "api_key", api_key,
-                    "api_secret", api_secret,
-                    "secure", true));
 
-            Map params = ObjectUtils.asMap(
-                    "public_id", "empleado",
-                    "overwrite", false,
-                    "notification_url", "https://mysite.com/notify_endpoint",
-                    "resource_type", "image"
-            );
-            try{
-                Map uploadResult = cloudinary.uploader().upload(new File("doc.mp4"), params);
-            }catch(Exception e){
-                throw new RuntimeException(e);
-            }
-
-        }
 
         return mapToResponse(repository.save(nuevo));
     }
