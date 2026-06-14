@@ -13,6 +13,8 @@ public interface EmpleadoCuadrillaRepository
 
     List<EmpleadoCuadrilla> findByCuadrilla(Cuadrilla cuadrilla);
     List<EmpleadoCuadrilla> findByCuadrilla_IdCuadrilla(Integer idCuadrilla);
+    org.springframework.data.domain.Page<EmpleadoCuadrilla> findByCuadrilla_IdCuadrilla(Integer idCuadrilla, org.springframework.data.domain.Pageable pageable);
+    org.springframework.data.domain.Page<EmpleadoCuadrilla> findByCuadrilla_IdCuadrillaAndFechaFinIsNull(Integer idCuadrilla, org.springframework.data.domain.Pageable pageable);
     List<EmpleadoCuadrilla> findByEmpleado(Empleado empleado);
 
     // miembros activos de una cuadrilla (fecha_fin IS NULL)

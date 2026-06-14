@@ -18,6 +18,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import com.example.forest_access.api.controllers.response.PaginadoCuadrilla;
 
 @Service
 @AllArgsConstructor
@@ -46,6 +50,28 @@ public class CuadrillaService {
         return repository.findByActiva(true).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public PaginadoCuadrilla obtenerCuadrillasPaginadas(Integer offset, Integer limite, Boolean activa) {
+        int pageNumber = offset / limite;
+        Pageable pageable = PageRequest.of(pageNumber, limite);
+        Page<Cuadrilla> pageResult;
+        
+        if (activa != null) {
+            pageResult = repository.findByActiva(activa, pageable);
+        } else {
+            pageResult = repository.findAll(pageable);
+        }
+
+        PaginadoCuadrilla pc = new PaginadoCuadrilla();
+        pc.setCuadrillas(pageResult.getContent().stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList()));
+        pc.setTotal((int) pageResult.getTotalElements());
+        pc.setPagina(offset);
+        pc.setLimite(limite);
+        return pc;
     }
 
     @Transactional
@@ -88,11 +114,9 @@ public class CuadrillaService {
     public void terminar(Integer id) {
         Cuadrilla cuadrilla = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Cuadrilla no encontrada"));
-        
-        // 1. Desactivamos la cuadrilla
+
         cuadrilla.setActiva(false);
 
-        // 2. Cerramos el ciclo de todos sus empleados activos
         List<EmpleadoCuadrilla> activos = empleadoCuadrillaRepository.findByCuadrillaAndFechaFinIsNull(cuadrilla);
         for (EmpleadoCuadrilla ec : activos) {
             ec.setFechaFin(LocalDate.now());
@@ -105,20 +129,17 @@ public class CuadrillaService {
         Cuadrilla cuadrilla = repository.findById(idCuadrilla)
                 .orElseThrow(() -> new EntityNotFoundException("Cuadrilla no encontrada"));
 
-        // Obtenemos los empleados que ESTABAN activos
         List<EmpleadoCuadrilla> activos = empleadoCuadrillaRepository.findByCuadrillaAndFechaFinIsNull(cuadrilla);
 
-        // 1. Damos de baja a los que ya NO están en la nueva lista
         for (EmpleadoCuadrilla ec : activos) {
             boolean sigueEstando = nuevosMiembros.stream()
                     .anyMatch(n -> n.getIdEmpleado().equals(ec.getId().getIdEmpleado()));
             
             if (!sigueEstando) {
-                ec.setFechaFin(LocalDate.now()); // Lo desvinculamos
+                ec.setFechaFin(LocalDate.now());
             }
         }
 
-        // 2. Actualizamos roles de los que se quedaron, o creamos a los nuevos
         for (EmpleadoRequest dto : nuevosMiembros) {
             EmpleadoCuadrilla ecExistente = activos.stream()
                     .filter(ec -> ec.getId().getIdEmpleado().equals(dto.getIdEmpleado()))
@@ -126,10 +147,8 @@ public class CuadrillaService {
                     .orElse(null);
 
             if (ecExistente != null) {
-                // Ya estaba en la cuadrilla, solo actualizamos el rol si cambió
                 ecExistente.setRol(dto.getRol());
             } else {
-                // Es un empleado NUEVO en la cuadrilla
                 Empleado empleado = empleadoRepository.findById(dto.getIdEmpleado())
                         .orElseThrow(() -> new EntityNotFoundException("Empleado no encontrado: " + dto.getIdEmpleado()));
                 
@@ -138,7 +157,7 @@ public class CuadrillaService {
                 nuevoEc.setCuadrilla(cuadrilla);
                 nuevoEc.setEmpleado(empleado);
                 nuevoEc.setRol(dto.getRol());
-                nuevoEc.setFechaFin(null); // Está activo actualmente
+                nuevoEc.setFechaFin(null);
                 
                 empleadoCuadrillaRepository.save(nuevoEc);
             }

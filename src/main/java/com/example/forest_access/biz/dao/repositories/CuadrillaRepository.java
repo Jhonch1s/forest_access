@@ -9,4 +9,5 @@ import java.util.Optional;
 public interface CuadrillaRepository extends JpaRepository<Cuadrilla, Integer> {
     Optional<Cuadrilla> findByNombre(String nombre);
     List<Cuadrilla> findByActiva(Boolean activa);
+    org.springframework.data.domain.Page<Cuadrilla> findByActiva(Boolean activa, org.springframework.data.domain.Pageable pageable);
 }
