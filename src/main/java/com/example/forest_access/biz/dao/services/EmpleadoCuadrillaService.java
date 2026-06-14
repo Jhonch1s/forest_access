@@ -17,6 +17,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import com.example.forest_access.api.controllers.response.PaginadoEmpleadoCuadrilla;
 
 @Service
 @AllArgsConstructor
@@ -70,6 +74,28 @@ public class EmpleadoCuadrillaService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
+    public PaginadoEmpleadoCuadrilla obtenerEmpleadosPaginadosPorCuadrilla(Integer idCuadrilla, Integer offset, Integer limite, Boolean mostrarHistorial) {
+        int pageNumber = offset / limite;
+        Pageable pageable = PageRequest.of(pageNumber, limite);
+        Page<EmpleadoCuadrilla> pageResult;
+
+        if (mostrarHistorial != null && mostrarHistorial) {
+            pageResult = repository.findByCuadrilla_IdCuadrilla(idCuadrilla, pageable);
+        } else {
+            pageResult = repository.findByCuadrilla_IdCuadrillaAndFechaFinIsNull(idCuadrilla, pageable);
+        }
+
+        PaginadoEmpleadoCuadrilla pec = new PaginadoEmpleadoCuadrilla();
+        pec.setEmpleadosCuadrilla(pageResult.getContent().stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList()));
+        pec.setTotal((int) pageResult.getTotalElements());
+        pec.setPagina(offset);
+        pec.setLimite(limite);
+        return pec;
+    }
+
     private EmpleadoCuadrillaResponse mapToResponse(EmpleadoCuadrilla entidad) {
         EmpleadoCuadrillaResponse res = new EmpleadoCuadrillaResponse();
         res.setIdCuadrilla(entidad.getId().getIdCuadrilla());
@@ -78,8 +104,8 @@ public class EmpleadoCuadrillaService {
         res.setNombreEmpleado(entidad.getEmpleado().getNombre());
         res.setFechaInicio(entidad.getId().getFechaInicio());
         res.setFechaFin(entidad.getFechaFin());
-        res.setRol(entidad.getRol()); // Faltaba mapear el rol
-        res.setEsActivo(entidad.getFechaFin() == null); // Mapeamos esActivo automáticamente
+        res.setRol(entidad.getRol());
+        res.setEsActivo(entidad.getFechaFin() == null);
 
         return res;
     }

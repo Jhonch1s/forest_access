@@ -7,7 +7,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import com.example.forest_access.api.controllers.response.PaginadoEmpleadoCuadrilla;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -21,6 +21,15 @@ public class EmpleadoCuadrillaController {
     @GetMapping
     public ResponseEntity<List<EmpleadoCuadrillaResponse>> findAll() {
         return ResponseEntity.ok(service.findAll());
+    }
+
+    @GetMapping("/cuadrilla/{idCuadrilla}/paginado/{offset}/{limite}/{mostrarHistorial}")
+    public ResponseEntity<PaginadoEmpleadoCuadrilla> findByCuadrillaPaginado(
+            @PathVariable Integer idCuadrilla,
+            @PathVariable Integer offset,
+            @PathVariable Integer limite,
+            @PathVariable Boolean mostrarHistorial) {
+        return ResponseEntity.ok(service.obtenerEmpleadosPaginadosPorCuadrilla(idCuadrilla, offset, limite, mostrarHistorial));
     }
 
     @PostMapping("/create")

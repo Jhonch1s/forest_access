@@ -1,6 +1,7 @@
 package com.example.forest_access.api.controllers;
 
 import com.example.forest_access.api.controllers.response.CuadrillaResponse;
+import com.example.forest_access.api.controllers.response.PaginadoCuadrilla;
 import com.example.forest_access.biz.dao.services.CuadrillaService;
 import com.example.forest_access.dto.CuadrillaDTO;
 import com.example.forest_access.api.controllers.request.EmpleadoRequest;
@@ -31,6 +32,14 @@ public class CuadrillaController {
     @GetMapping("/activas")
     public ResponseEntity<List<CuadrillaResponse>> findActivas() {
         return ResponseEntity.ok(service.findActivas());
+    }
+
+    @GetMapping("/paginado/{offset}/{limite}/{filtroActivas}")
+    public ResponseEntity<PaginadoCuadrilla> findAllPaginado(
+            @PathVariable Integer offset,
+            @PathVariable Integer limite,
+            @PathVariable Boolean filtroActivas) {
+        return ResponseEntity.ok(service.obtenerCuadrillasPaginadas(offset, limite, filtroActivas));
     }
 
     @PostMapping("/create")
