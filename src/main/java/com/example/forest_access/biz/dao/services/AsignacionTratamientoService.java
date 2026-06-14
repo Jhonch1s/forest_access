@@ -1,6 +1,7 @@
 package com.example.forest_access.biz.dao.services;
 
 import com.example.forest_access.api.controllers.request.AsignacionTratamientoRequest;
+import com.example.forest_access.api.controllers.response.AsignacionTratamientoPaginado;
 import com.example.forest_access.api.controllers.response.AsignacionTratamientoResponse;
 import com.example.forest_access.biz.dao.entities.*;
 import com.example.forest_access.biz.dao.repositories.*;
@@ -30,6 +31,33 @@ public class AsignacionTratamientoService {
 
     public List<AsignacionTratamientoResponse> getByParcela(Long idParcela) {
         return asignacionRepo.findByParcelaIdParcela(idParcela).stream().map(this::toResponse).toList();
+    }
+
+    public AsignacionTratamientoPaginado getByParcelaPaginado(Long idParcela, Integer offset,Integer limite){
+
+        List<AsignacionTratamientoResponse> todasAsignaciones = asignacionRepo.findAll().stream()
+                .skip(offset)
+                .limit(limite)
+                .map(this::toResponse).toList();
+
+        List<AsignacionTratamientoResponse> asignaciones = asignacionRepo.findByParcelaIdParcela(idParcela).stream()
+                .skip(offset)
+                .limit(limite)
+                .map(this::toResponse).toList();
+        AsignacionTratamientoPaginado atp = new AsignacionTratamientoPaginado();
+        if(idParcela == 0){
+            atp.setAsignaciones(todasAsignaciones);
+            atp.setTotal(asignacionRepo.findAll().size());
+            atp.setPagina(offset);
+            atp.setLimite(limite);
+        }else{
+            atp.setAsignaciones(asignaciones);
+            atp.setTotal(asignacionRepo.findByParcelaIdParcela(idParcela).size());
+            atp.setPagina(offset);
+            atp.setLimite(limite);
+        }
+
+        return atp;
     }
 
     public List<AsignacionTratamientoResponse> getByRodal(Long idRodal) {

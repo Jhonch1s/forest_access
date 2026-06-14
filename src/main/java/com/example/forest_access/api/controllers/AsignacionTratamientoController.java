@@ -1,6 +1,7 @@
 package com.example.forest_access.api.controllers;
 
 import com.example.forest_access.api.controllers.request.AsignacionTratamientoRequest;
+import com.example.forest_access.api.controllers.response.AsignacionTratamientoPaginado;
 import com.example.forest_access.api.controllers.response.AsignacionTratamientoResponse;
 import com.example.forest_access.biz.dao.services.AsignacionTratamientoService;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +24,13 @@ public class AsignacionTratamientoController {
     @GetMapping("/parcela/{idParcela}")
     public ResponseEntity<List<AsignacionTratamientoResponse>> getByParcela(@PathVariable Long idParcela) {
         return ResponseEntity.ok(service.getByParcela(idParcela));
+    }
+
+    @GetMapping("/parcela/{idParcela}/{offset}/{limite}")
+    public ResponseEntity<AsignacionTratamientoPaginado> getByParcelaPaginado(@PathVariable Long idParcela,
+                                                                              @PathVariable Integer offset,
+                                                                              @PathVariable Integer limite) {
+        return ResponseEntity.ok(service.getByParcelaPaginado(idParcela, offset, limite));
     }
 
     @GetMapping("/rodal/{idRodal}")
