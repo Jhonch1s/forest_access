@@ -3,7 +3,6 @@ package com.example.forest_access.biz.dao.services;
 import com.example.forest_access.api.controllers.response.PerfilResponse;
 import com.example.forest_access.api.controllers.response.PunteroUsuarioResponse;
 import com.example.forest_access.api.controllers.response.UsuarioResponse;
-import com.example.forest_access.biz.dao.entities.Campo;
 import com.example.forest_access.biz.dao.entities.Empleado;
 import com.example.forest_access.biz.dao.entities.Perfil;
 import com.example.forest_access.biz.dao.entities.Usuario;
@@ -13,20 +12,29 @@ import com.example.forest_access.biz.dao.repositories.UsuarioRepository;
 import com.example.forest_access.dto.PunteroUsuarioRequest;
 import com.example.forest_access.dto.UsuarioDTO;
 import jakarta.persistence.EntityNotFoundException;
-import lombok.AllArgsConstructor;
-import org.springframework.beans.BeanUtils;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
-@AllArgsConstructor
 public class UsuarioService {
 
-    private UsuarioRepository repo;
-    private EmpleadoRepository empleadoRepository;
-    private PerfilRepository perfilRepository;
+    private final UsuarioRepository repo;
+    private final EmpleadoRepository empleadoRepository;
+    private final PerfilRepository perfilRepository;
+    private final PasswordEncoder passwordEncoder;
+
+    public UsuarioService(UsuarioRepository repo,
+                          EmpleadoRepository empleadoRepository,
+                          PerfilRepository perfilRepository,
+                          PasswordEncoder passwordEncoder) {
+        this.repo = repo;
+        this.empleadoRepository = empleadoRepository;
+        this.perfilRepository = perfilRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     @Transactional(readOnly = true)
     public Usuario findById(Integer id) {
@@ -36,9 +44,10 @@ public class UsuarioService {
 
     @Transactional
     public List<UsuarioResponse> mostrarUsuarios() {
-        return repo.findAll().stream().map(u ->{
+        return repo.findAll().stream().map(u -> {
             UsuarioResponse dto = new UsuarioResponse();
-            BeanUtils.copyProperties(u, dto);
+            dto.setId(u.getId());
+            dto.setNombreUsuario(u.getNombreUsuario());
             return dto;
         }).toList();
     }
@@ -47,28 +56,28 @@ public class UsuarioService {
     public UsuarioResponse createUsuario(UsuarioDTO usuario) {
         Usuario usu = new Usuario();
         usu.setNombreUsuario(usuario.getNombreUsuario());
-        usu.setPassword(usuario.getPassword());
+        usu.setPassword(passwordEncoder.encode(usuario.getPassword()));
 
-        UsuarioResponse usu1= new UsuarioResponse();
-        usu1.setId(usu.getId());
-        usu1.setNombreUsuario(usuario.getNombreUsuario());
-        repo.save(usu);
+        Usuario saved = repo.save(usu);
+
+        UsuarioResponse usu1 = new UsuarioResponse();
+        usu1.setId(saved.getId());
+        usu1.setNombreUsuario(saved.getNombreUsuario());
         return usu1;
     }
 
     @Transactional
-    public UsuarioResponse updateUsuario(Integer id,UsuarioDTO usuario) {
-        Usuario existente =  findById(id);
-        UsuarioResponse response = new UsuarioResponse();
-
-        response.setNombreUsuario(usuario.getNombreUsuario());
-        response.setId(existente.getId());
+    public UsuarioResponse updateUsuario(Integer id, UsuarioDTO usuario) {
+        Usuario existente = findById(id);
 
         existente.setNombreUsuario(usuario.getNombreUsuario());
-        existente.setPassword(usuario.getPassword());
+        existente.setPassword(passwordEncoder.encode(usuario.getPassword()));
 
-        repo.save(existente);
+        Usuario saved = repo.save(existente);
 
+        UsuarioResponse response = new UsuarioResponse();
+        response.setId(saved.getId());
+        response.setNombreUsuario(saved.getNombreUsuario());
         return response;
     }
 
@@ -76,7 +85,6 @@ public class UsuarioService {
     public void deleteUsuario(Integer id) {
         Usuario existente = findById(id);
         repo.delete(existente);
-        return;
     }
 
     /* ── Puntero-specific methods ── */
@@ -96,7 +104,7 @@ public class UsuarioService {
     public PunteroUsuarioResponse createPunteroUsuario(PunteroUsuarioRequest request) {
         Usuario usu = new Usuario();
         usu.setNombreUsuario(request.getNombreUsuario());
-        usu.setPassword(request.getPassword());
+        usu.setPassword(passwordEncoder.encode(request.getPassword()));
 
         if (request.getIdEmpleado() != null) {
             Empleado empleado = empleadoRepository.findById(request.getIdEmpleado())
@@ -118,7 +126,7 @@ public class UsuarioService {
 
         existente.setNombreUsuario(request.getNombreUsuario());
         if (request.getPassword() != null && !request.getPassword().isEmpty()) {
-            existente.setPassword(request.getPassword());
+            existente.setPassword(passwordEncoder.encode(request.getPassword()));
         }
 
         if (request.getIdEmpleado() != null) {
@@ -135,6 +143,21 @@ public class UsuarioService {
     public void deletePunteroUsuario(Integer id) {
         Usuario existente = findById(id);
         repo.delete(existente);
+    }
+
+    /* ── Password change for own account ── */
+
+    @Transactional
+    public PunteroUsuarioResponse cambiarPasswordPropio(Integer idUsuario, String currentPassword, String nuevaPassword) {
+        Usuario existente = findById(idUsuario);
+
+        if (!passwordEncoder.matches(currentPassword, existente.getPassword())) {
+            throw new IllegalArgumentException("La contraseña actual es incorrecta");
+        }
+
+        existente.setPassword(passwordEncoder.encode(nuevaPassword));
+        existente = repo.save(existente);
+        return toPunteroResponse(existente);
     }
 
     private PunteroUsuarioResponse toPunteroResponse(Usuario usuario) {

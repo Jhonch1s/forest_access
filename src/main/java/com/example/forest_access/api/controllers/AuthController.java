@@ -18,10 +18,9 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<String> login(@RequestBody LoginRequest request) {
-        // Utilizamos el Optional correctamente con orElseThrow
         Usuario u = authService.login(request.getUsuario(), request.getPassword())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuario o contraseña incorrectos"));
-        
+
         String token = authService.generarToken(u);
         return new ResponseEntity<>(token, HttpStatus.OK);
     }

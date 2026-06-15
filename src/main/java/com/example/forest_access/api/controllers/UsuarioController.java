@@ -2,16 +2,15 @@ package com.example.forest_access.api.controllers;
 
 import com.example.forest_access.api.controllers.response.PunteroUsuarioResponse;
 import com.example.forest_access.api.controllers.response.UsuarioResponse;
-import com.example.forest_access.biz.dao.entities.Usuario;
 import com.example.forest_access.biz.dao.services.UsuarioService;
 import com.example.forest_access.dto.PunteroUsuarioRequest;
 import com.example.forest_access.dto.UsuarioDTO;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/usuarios")
@@ -71,5 +70,16 @@ public class UsuarioController {
     public ResponseEntity<Void> eliminarPunteroUsuario(@PathVariable Integer id) {
         usuarioService.deletePunteroUsuario(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/puntero/cambiar-password/{id}")
+    public ResponseEntity<PunteroUsuarioResponse> cambiarPasswordPuntero(@PathVariable Integer id,
+            @RequestBody Map<String, String> body) {
+        String currentPassword = body.get("currentPassword");
+        String nuevaPassword = body.get("newPassword");
+        if (currentPassword == null || currentPassword.isBlank() || nuevaPassword == null || nuevaPassword.isBlank()) {
+            return ResponseEntity.badRequest().build();
+        }
+        return ResponseEntity.ok(usuarioService.cambiarPasswordPropio(id, currentPassword, nuevaPassword));
     }
 }
