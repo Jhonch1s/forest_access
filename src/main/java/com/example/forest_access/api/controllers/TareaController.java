@@ -2,6 +2,7 @@ package com.example.forest_access.api.controllers;
 
 import com.example.forest_access.api.controllers.request.TareaRequest;
 import com.example.forest_access.api.controllers.response.TareaResponse;
+import com.example.forest_access.api.controllers.response.TareaSimpleResponse;
 import com.example.forest_access.biz.dao.services.TareaService;
 import com.example.forest_access.dto.ReporteEmpleadoDTO;
 import lombok.AllArgsConstructor;
@@ -58,6 +59,11 @@ public class TareaController {
     @GetMapping("/asignacion/{idAsignacion}")
     public ResponseEntity<List<TareaResponse>> findByAsignacion(@PathVariable Long idAsignacion) {
         return ResponseEntity.ok(service.findPorAsignacion(idAsignacion));
+    }
+
+    @GetMapping("/asignacion/simple/{idAsignacion}")
+    public ResponseEntity<List<TareaSimpleResponse>> findByAsignacionSimple(@PathVariable Long idAsignacion) {
+        return ResponseEntity.ok(service.findPorAsignacionSimple(idAsignacion));
     }
 
     @GetMapping("/liquidacion")

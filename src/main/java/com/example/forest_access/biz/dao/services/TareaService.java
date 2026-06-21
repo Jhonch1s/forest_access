@@ -2,6 +2,7 @@ package com.example.forest_access.biz.dao.services;
 
 import com.example.forest_access.api.controllers.request.TareaRequest;
 import com.example.forest_access.api.controllers.response.TareaResponse;
+import com.example.forest_access.api.controllers.response.TareaSimpleResponse;
 import com.example.forest_access.biz.dao.entities.*;
 import com.example.forest_access.biz.dao.repositories.*;
 import com.example.forest_access.dto.ReporteEmpleadoDTO;
@@ -31,6 +32,8 @@ public class TareaService {
     private final CatalogoTareaRepository catalogoRepository;
     private final AsignacionTratamientoRepository asignacionRepository;
     private final EmpleadoHabilitacionRepository empleadoHabilitacionRepository;
+    private final EmpleadoCuadrillaRepository empleadocuadrepo;
+    private final CuadrillaRepository cuadrillaRepository;
 
     @Transactional(readOnly = true)
     public List<TareaResponse> findAll() {
@@ -218,6 +221,18 @@ public class TareaService {
         res.setFecha(t.getFecha());
         res.setObservaciones(t.getObservaciones());
 
+        List<EmpleadoCuadrilla> empcuad = empleadocuadrepo.findByEmpleado(t.getEmpleado());
+        EmpleadoCuadrilla empcuad1 = empcuad.stream()
+                .filter(c -> c.getCuadrilla() != null && c.getCuadrilla().getActiva())
+                .findFirst()
+                .orElse(null);
+
+
+        res.setIdCuadrilla(empcuad1.getCuadrilla().getIdCuadrilla());
+        res.setNombreCuadrilla(empcuad1.getCuadrilla().getNombre());
+
+
+
         if (t.getAsignacionTratamiento() != null) {
             res.setIdAsignacion(Math.toIntExact(t.getAsignacionTratamiento().getIdAsignacion()));
         }
@@ -235,5 +250,37 @@ public class TareaService {
         }
 
         return res;
+    }
+
+    @Transactional(readOnly = true)
+    public List<TareaSimpleResponse> findPorAsignacionSimple(Long idAsignacion) {
+        return repository.findByAsignacionTratamiento_IdAsignacion(idAsignacion)
+                .stream()
+                .map(tarea -> {
+                    TareaSimpleResponse res = new TareaSimpleResponse();
+                    res.setIdTarea(tarea.getIdTarea());
+                    res.setDescripcion(tarea.getDescripcion());
+                    res.setHoras(tarea.getHoras());
+                    res.setFecha(tarea.getFecha());
+                    res.setObservaciones(tarea.getObservaciones());
+
+                    List<EmpleadoCuadrilla> empcuad = empleadocuadrepo.findByEmpleado(tarea.getEmpleado());
+                    EmpleadoCuadrilla empcuad1 = empcuad.stream()
+                            .filter(c -> c.getCuadrilla() != null && c.getCuadrilla().getActiva())
+                            .findFirst()
+                            .orElse(null);
+                    res.setNombreCuadrilla(empcuad1.getCuadrilla().getNombre());
+
+                    if (tarea.getEstado() != null) {
+                        res.setNombreEstado(tarea.getEstado().getNombre());
+                    }
+
+                    if (tarea.getAsignacionTratamiento() != null) {
+                        res.setIdAsignacion(Math.toIntExact(tarea.getAsignacionTratamiento().getIdAsignacion()));
+                    }
+
+                    return res;
+
+                }).collect(Collectors.toList());
     }
 }
