@@ -34,8 +34,7 @@ public class DashboardService {
     public DashboardDTO obtenerDatosDashboard() {
         LocalDate hoy = LocalDate.now();
 
-        // 1. Cuadrillas Activas
-        // Cuadrillas que tengan tareas asignadas cuya fecha limite sea >= hoy
+        // Cuadrillas Activas
         List<TareaAsignada> asignadasVigentes = tareaAsignadaRepository.findByFechaLimiteGreaterThanEqual(hoy);
         
         List<CuadrillaResumenDTO> cuadrillas = asignadasVigentes.stream()
@@ -45,13 +44,13 @@ public class DashboardService {
                         ta.getAsignacionTratamiento().getTratamiento().getNombre(),
                         ta.getFechaLimite().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
                 ))
-                // Evitar duplicados si una cuadrilla tiene varias tareas asignadas hoy
+                // para evitar duplicados si una cuadrilla tiene varias tareas asignadas hoy
                 .collect(Collectors.collectingAndThen(
                         Collectors.toMap(CuadrillaResumenDTO::getId, c -> c, (c1, c2) -> c1),
                         m -> new ArrayList<>(m.values())
                 ));
 
-        // 2. Habilitaciones por vencer (en los próximos 7 días) o vencidas
+        // Habilitaciones por vencer o vencidas
         LocalDate en7Dias = hoy.plusDays(7);
         List<EmpleadoHabilitacion> habs = empleadoHabilitacionRepository.findAll();
         List<HabilitacionResumenDTO> habilitaciones = habs.stream()
@@ -69,21 +68,20 @@ public class DashboardService {
                 .sorted(Comparator.comparing(h -> h.getEstado().equals("Vencida") ? 0 : 1))
                 .collect(Collectors.toList());
 
-        // 3. Estadísticas
-        // A) Productividad Semanal (Lunes a Viernes de la semana actual)
+        // Productividad Semanal
         LocalDate inicioSemana = hoy.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
         LocalDate finSemana = hoy.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
         List<Tarea> tareasEstaSemana = tareaRepository.findByFechaBetween(inicioSemana, finSemana);
 
-        List<Integer> productividad = Arrays.asList(0, 0, 0, 0, 0); // Lunes a Viernes
+        List<Integer> productividad = Arrays.asList(0, 0, 0, 0, 0);
         for (Tarea t : tareasEstaSemana) {
             int dia = t.getFecha().getDayOfWeek().getValue();
             if (dia >= 1 && dia <= 5) {
-                productividad.set(dia - 1, productividad.get(dia - 1) + 1); // Sumar 1 tarea finalizada o registrada
+                productividad.set(dia - 1, productividad.get(dia - 1) + 1);
             }
         }
 
-        // B) Evolución Horas (últimas 4 semanas móviles)
+        // evolución Horas (últimas 4 semanas)
         // Semana -3, Semana -2, Semana -1, Semana Actual
         LocalDate inicioSemanaActual = hoy.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
         LocalDate inicioSemanaMenos1 = inicioSemanaActual.minusWeeks(1);
@@ -119,13 +117,13 @@ public class DashboardService {
                 inicioSemanaActual.format(DateTimeFormatter.ofPattern("dd/MM"))
         );
 
-        // C) Estado Tareas (En proceso, Pendiente, Finalizada)
+        // Estado Tareas (En proceso, Pendiente, Finalizada)
         Map<String, Integer> estadoTareas = new HashMap<>();
         estadoTareas.put("En proceso", 0);
         estadoTareas.put("Pendiente", 0);
         estadoTareas.put("Finalizada", 0);
         
-        // Vamos a tomar todas las tareas del mes o activas
+        // Tomamos todas las tareas del mes o activas
         for (Tarea t : tareasUltimas4Semanas) {
             String estadoStr = t.getEstado() != null ? t.getEstado().getNombre() : "Pendiente";
             if (estadoStr.equalsIgnoreCase("En proceso")) estadoStr = "En proceso";

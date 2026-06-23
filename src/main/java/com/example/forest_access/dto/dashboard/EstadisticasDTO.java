@@ -12,8 +12,8 @@ import java.util.Map;
 @NoArgsConstructor
 @AllArgsConstructor
 public class EstadisticasDTO {
-    private List<Integer> productividadSemanal; // Lunes a Viernes
-    private List<BigDecimal> evolucionHoras; // Semana -3, Semana -2, Semana -1, Semana Actual
-    private List<String> labelsSemanas; // Nombres de las semanas para el gráfico
-    private Map<String, Integer> estadoTareas; // "En proceso", "Pendiente", "Finalizada"
+    private List<Integer> productividadSemanal;
+    private List<BigDecimal> evolucionHoras;
+    private List<String> labelsSemanas;
+    private Map<String, Integer> estadoTareas;
 }
