@@ -21,7 +21,10 @@ import java.util.stream.Collectors;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 import com.example.forest_access.api.controllers.response.PaginadoCuadrilla;
+import com.example.forest_access.api.controllers.response.EmpleadoCuadrillaResponse;
 
 @Service
 @AllArgsConstructor
@@ -125,45 +128,100 @@ public class CuadrillaService {
     }
 
     @Transactional
+    public void reactivar(Integer id) {
+        Cuadrilla cuadrilla = repository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Cuadrilla no encontrada"));
+
+        List<EmpleadoCuadrilla> ultimos = obtenerUltimosMiembros(cuadrilla);
+        List<String> empleadosOcupados = new java.util.ArrayList<>();
+        
+        for (EmpleadoCuadrilla ec : ultimos) {
+            List<EmpleadoCuadrilla> activas = empleadoCuadrillaRepository.findByEmpleadoAndFechaFinIsNull(ec.getEmpleado());
+            if (!activas.isEmpty()) {
+                empleadosOcupados.add(ec.getEmpleado().getNombre());
+            }
+        }
+        
+        if (!empleadosOcupados.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "No se puede recuperar la cuadrilla porque los siguientes empleados están activos en otras cuadrillas: " + String.join(", ", empleadosOcupados) + ". Edita esta cuadrilla para removerlos antes de recuperar.");
+        }
+
+        cuadrilla.setActiva(true);
+        repository.save(cuadrilla);
+
+        for (EmpleadoCuadrilla ec : ultimos) {
+            EmpleadoCuadrilla nuevoEc = new EmpleadoCuadrilla();
+            nuevoEc.setId(new EmpleadoCuadrillaId(id, ec.getEmpleado().getIdEmpleado(), LocalDate.now()));
+            nuevoEc.setCuadrilla(cuadrilla);
+            nuevoEc.setEmpleado(ec.getEmpleado());
+            nuevoEc.setRol(ec.getRol());
+            nuevoEc.setFechaFin(null);
+            empleadoCuadrillaRepository.save(nuevoEc);
+        }
+    }
+
+    @Transactional
     public void sincronizarEmpleados(Integer idCuadrilla, List<EmpleadoRequest> nuevosMiembros) {
         Cuadrilla cuadrilla = repository.findById(idCuadrilla)
                 .orElseThrow(() -> new EntityNotFoundException("Cuadrilla no encontrada"));
 
-        List<EmpleadoCuadrilla> activos = empleadoCuadrillaRepository.findByCuadrillaAndFechaFinIsNull(cuadrilla);
+        if (cuadrilla.getActiva()) {
+            List<EmpleadoCuadrilla> activos = empleadoCuadrillaRepository.findByCuadrillaAndFechaFinIsNull(cuadrilla);
 
-        for (EmpleadoCuadrilla ec : activos) {
-            boolean sigueEstando = nuevosMiembros.stream()
-                    .anyMatch(n -> n.getIdEmpleado().equals(ec.getId().getIdEmpleado()));
+            for (EmpleadoCuadrilla ec : activos) {
+                boolean sigueEstando = nuevosMiembros.stream()
+                        .anyMatch(n -> n.getIdEmpleado().equals(ec.getId().getIdEmpleado()));
+                
+                if (!sigueEstando) {
+                    ec.setFechaFin(LocalDate.now());
+                }
+            }
+
+            for (EmpleadoRequest dto : nuevosMiembros) {
+                EmpleadoCuadrilla ecExistente = activos.stream()
+                        .filter(ec -> ec.getId().getIdEmpleado().equals(dto.getIdEmpleado()))
+                        .findFirst()
+                        .orElse(null);
+
+                if (ecExistente != null) {
+                    ecExistente.setRol(dto.getRol());
+                } else {
+                    Empleado empleado = empleadoRepository.findById(dto.getIdEmpleado())
+                            .orElseThrow(() -> new EntityNotFoundException("Empleado no encontrado: " + dto.getIdEmpleado()));
+                    
+                    EmpleadoCuadrilla nuevoEc = new EmpleadoCuadrilla();
+                    nuevoEc.setId(new EmpleadoCuadrillaId(idCuadrilla, dto.getIdEmpleado(), LocalDate.now()));
+                    nuevoEc.setCuadrilla(cuadrilla);
+                    nuevoEc.setEmpleado(empleado);
+                    nuevoEc.setRol(dto.getRol());
+                    nuevoEc.setFechaFin(null);
+                    
+                    empleadoCuadrillaRepository.save(nuevoEc);
+                }
+            }
             
-            if (!sigueEstando) {
-                ec.setFechaFin(LocalDate.now());
+            empleadoCuadrillaRepository.saveAll(activos);
+        } else {
+            // Cuadrilla inactiva: modificar solo los últimos miembros registrados
+            List<EmpleadoCuadrilla> ultimos = obtenerUltimosMiembros(cuadrilla);
+            for (EmpleadoCuadrilla ec : ultimos) {
+                boolean sigueEstando = nuevosMiembros.stream()
+                        .anyMatch(n -> n.getIdEmpleado().equals(ec.getId().getIdEmpleado()));
+                
+                if (!sigueEstando) {
+                    empleadoCuadrillaRepository.delete(ec);
+                } else {
+                    EmpleadoRequest dto = nuevosMiembros.stream()
+                            .filter(n -> n.getIdEmpleado().equals(ec.getId().getIdEmpleado()))
+                            .findFirst()
+                            .orElse(null);
+                    if (dto != null && !ec.getRol().equals(dto.getRol())) {
+                        ec.setRol(dto.getRol());
+                        empleadoCuadrillaRepository.save(ec);
+                    }
+                }
             }
         }
-
-        for (EmpleadoRequest dto : nuevosMiembros) {
-            EmpleadoCuadrilla ecExistente = activos.stream()
-                    .filter(ec -> ec.getId().getIdEmpleado().equals(dto.getIdEmpleado()))
-                    .findFirst()
-                    .orElse(null);
-
-            if (ecExistente != null) {
-                ecExistente.setRol(dto.getRol());
-            } else {
-                Empleado empleado = empleadoRepository.findById(dto.getIdEmpleado())
-                        .orElseThrow(() -> new EntityNotFoundException("Empleado no encontrado: " + dto.getIdEmpleado()));
-                
-                EmpleadoCuadrilla nuevoEc = new EmpleadoCuadrilla();
-                nuevoEc.setId(new EmpleadoCuadrillaId(idCuadrilla, dto.getIdEmpleado(), LocalDate.now()));
-                nuevoEc.setCuadrilla(cuadrilla);
-                nuevoEc.setEmpleado(empleado);
-                nuevoEc.setRol(dto.getRol());
-                nuevoEc.setFechaFin(null);
-                
-                empleadoCuadrillaRepository.save(nuevoEc);
-            }
-        }
-        
-        empleadoCuadrillaRepository.saveAll(activos);
     }
 
     private CuadrillaResponse mapToResponse(Cuadrilla entidad) {
@@ -171,6 +229,46 @@ public class CuadrillaService {
         res.setIdCuadrilla(entidad.getIdCuadrilla());
         res.setNombre(entidad.getNombre());
         res.setActiva(entidad.getActiva());
+        return res;
+    }
+
+    private List<EmpleadoCuadrilla> obtenerUltimosMiembros(Cuadrilla cuadrilla) {
+        List<EmpleadoCuadrilla> todos = empleadoCuadrillaRepository.findByCuadrilla(cuadrilla);
+        if (todos.isEmpty()) return List.of();
+        
+        LocalDate maxFechaFin = todos.stream()
+            .map(EmpleadoCuadrilla::getFechaFin)
+            .filter(java.util.Objects::nonNull)
+            .max(LocalDate::compareTo)
+            .orElse(null);
+            
+        if (maxFechaFin == null) return List.of();
+        
+        return todos.stream()
+            .filter(ec -> maxFechaFin.equals(ec.getFechaFin()))
+            .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<EmpleadoCuadrillaResponse> getUltimosMiembrosResponse(Integer idCuadrilla) {
+        Cuadrilla cuadrilla = repository.findById(idCuadrilla)
+                .orElseThrow(() -> new EntityNotFoundException("Cuadrilla no encontrada"));
+        
+        return obtenerUltimosMiembros(cuadrilla).stream()
+                .map(this::mapToEmpleadoCuadrillaResponse)
+                .collect(Collectors.toList());
+    }
+
+    private EmpleadoCuadrillaResponse mapToEmpleadoCuadrillaResponse(EmpleadoCuadrilla entidad) {
+        EmpleadoCuadrillaResponse res = new EmpleadoCuadrillaResponse();
+        res.setIdCuadrilla(entidad.getId().getIdCuadrilla());
+        res.setNombreCuadrilla(entidad.getCuadrilla().getNombre());
+        res.setIdEmpleado(entidad.getId().getIdEmpleado());
+        res.setNombreEmpleado(entidad.getEmpleado().getNombre());
+        res.setFechaInicio(entidad.getId().getFechaInicio());
+        res.setFechaFin(entidad.getFechaFin());
+        res.setRol(entidad.getRol());
+        res.setEsActivo(entidad.getFechaFin() == null);
         return res;
     }
 }

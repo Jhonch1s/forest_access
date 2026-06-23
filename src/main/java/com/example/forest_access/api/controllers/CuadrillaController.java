@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.util.List;
+import com.example.forest_access.api.controllers.response.EmpleadoCuadrillaResponse;
 
 @RestController
 @RequestMapping("/api/cuadrillas")
@@ -42,6 +43,11 @@ public class CuadrillaController {
         return ResponseEntity.ok(service.obtenerCuadrillasPaginadas(offset, limite, filtroActivas));
     }
 
+    @GetMapping("/{id}/ultimos-miembros")
+    public ResponseEntity<List<EmpleadoCuadrillaResponse>> getUltimosMiembros(@PathVariable Integer id) {
+        return ResponseEntity.ok(service.getUltimosMiembrosResponse(id));
+    }
+
     @PostMapping("/create")
     public ResponseEntity<CuadrillaResponse> create(@RequestBody CuadrillaDTO dto) {
         CuadrillaResponse creada = service.create(dto);
@@ -64,6 +70,12 @@ public class CuadrillaController {
     @PutMapping("/{id}/terminar")
     public ResponseEntity<Void> terminar(@PathVariable Integer id) {
         service.terminar(id);
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("/{id}/reactivar")
+    public ResponseEntity<Void> reactivar(@PathVariable Integer id) {
+        service.reactivar(id);
         return ResponseEntity.ok().build();
     }
 

@@ -18,4 +18,6 @@ public interface TareaAsignadaRepository extends JpaRepository<TareaAsignada, In
 
     List<TareaAsignada> findByAsignacionTratamiento_IdAsignacionAndCuadrilla_IdCuadrillaAndFechaLimiteGreaterThanEqual(
             Long idAsignacion, Integer idCuadrilla, LocalDate fecha);
+
+    List<TareaAsignada> findByFechaLimiteGreaterThanEqual(LocalDate fecha);
 }
