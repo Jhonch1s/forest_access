@@ -37,18 +37,21 @@ public class DashboardService {
         // Cuadrillas Activas
         List<TareaAsignada> asignadasVigentes = tareaAsignadaRepository.findByFechaLimiteGreaterThanEqual(hoy);
         
-        List<CuadrillaResumenDTO> cuadrillas = asignadasVigentes.stream()
-                .map(ta -> new CuadrillaResumenDTO(
-                        ta.getCuadrilla().getIdCuadrilla(),
-                        ta.getCuadrilla().getNombre(),
-                        ta.getAsignacionTratamiento().getTratamiento().getNombre(),
-                        ta.getFechaLimite().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
-                ))
-                // para evitar duplicados si una cuadrilla tiene varias tareas asignadas hoy
-                .collect(Collectors.collectingAndThen(
-                        Collectors.toMap(CuadrillaResumenDTO::getId, c -> c, (c1, c2) -> c1),
-                        m -> new ArrayList<>(m.values())
-                ));
+        Map<Integer, CuadrillaResumenDTO> cuadrillasMap = new HashMap<>();
+        for (TareaAsignada ta : asignadasVigentes) {
+            Integer idCuadrilla = ta.getCuadrilla().getIdCuadrilla();
+            String nombreCuadrilla = ta.getCuadrilla().getNombre();
+            String tratamiento = ta.getAsignacionTratamiento().getTratamiento().getNombre();
+            String fecha = ta.getFechaLimite().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+            
+            if (!cuadrillasMap.containsKey(idCuadrilla)) {
+                cuadrillasMap.put(idCuadrilla, new CuadrillaResumenDTO(idCuadrilla, nombreCuadrilla, new ArrayList<>(), fecha));
+            }
+            if (!cuadrillasMap.get(idCuadrilla).getTratamientos().contains(tratamiento)) {
+                cuadrillasMap.get(idCuadrilla).getTratamientos().add(tratamiento);
+            }
+        }
+        List<CuadrillaResumenDTO> cuadrillas = new ArrayList<>(cuadrillasMap.values());
 
         // Habilitaciones por vencer o vencidas
         LocalDate en7Dias = hoy.plusDays(7);
@@ -123,8 +126,8 @@ public class DashboardService {
         estadoTareas.put("Pendiente", 0);
         estadoTareas.put("Finalizada", 0);
         
-        // Tomamos todas las tareas del mes o activas
-        for (Tarea t : tareasUltimas4Semanas) {
+        // Tomamos todas las tareas de la semana actual
+        for (Tarea t : tareasEstaSemana) {
             String estadoStr = t.getEstado() != null ? t.getEstado().getNombre() : "Pendiente";
             if (estadoStr.equalsIgnoreCase("En proceso")) estadoStr = "En proceso";
             else if (estadoStr.equalsIgnoreCase("Finalizado") || estadoStr.equalsIgnoreCase("Finalizada")) estadoStr = "Finalizada";
