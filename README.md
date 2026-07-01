@@ -98,5 +98,6 @@ Con ambos servidores (Backend y Frontend) corriendo simultáneamente:
 1. Abre tu navegador web favorito (Chrome, Firefox, Edge).
 2. Ingresa a la URL: **`http://localhost:5173`**
 3. Verás la pantalla de Login del sistema.
+4. Utiliza alguna de los usuarios proporcionados en la documentación para acceder al proyecto. 
 
 ¡Tu entorno local de Forestal AG ya está completamente operativo!
