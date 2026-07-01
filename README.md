@@ -42,32 +42,23 @@ El proyecto utiliza un archivo `application.yaml` parametrizado. Para conectarse
 
 Tienes dos opciones:
 
-**Opción A: Terminal (Recomendado)**
-*En Windows (PowerShell):*
+**Opción A: .env**
+
+Configurar las siguientes variables de entorno antes de ejecutar el proyecto en tu .env.
+
 ```powershell
-$env:DB_URL="jdbc:postgresql://localhost:5432/forest_access_db"
-$env:USERNAME="postgres"
-$env:PASSWORD="tu_contraseña"
-$env:JWT_SECRET="TIP2026"
+DB_URL="jdbc:postgresql://localhost:5432/forest_access_db"
+USERNAME="postgres"
+PASSWORD="tu_contraseña"
 ```
-*En Linux/Mac:*
-```bash
-export DB_URL="jdbc:postgresql://localhost:5432/forest_access_db"
-export USERNAME="postgres"
-export PASSWORD="tu_contraseña"
-export JWT_SECRET="TIP2026"
-```
+Ve a Edit Configurations… -> Modify options -> Environment variables -> selecciona el lugar donde tengas tu .env
 
 **Opción B: IntelliJ IDEA**
 Añade en *Edit Configurations* -> *Environment variables*:
-`DB_URL=jdbc:postgresql://localhost:5432/forest_access_db;USERNAME=postgres;PASSWORD=tu_contraseña;JWT_SECRET=TIP2026;`
+`DB_URL=jdbc:postgresql://localhost:5432/forest_access_db;USERNAME=postgres;PASSWORD=tu_contraseña;`
 
 ### Paso 3.3: Ejecutar el Servidor Backend
-Si usas Maven, ejecuta en la terminal de la carpeta `forest_access` (después de setear las variables):
-```bash
-./mvnw spring-boot:run
-```
-*Si estás en Windows usa `mvnw.cmd spring-boot:run`.*
+
 Si todo es correcto, verás en la consola que Tomcat se inició en el puerto `8081`. 
 
 *(Para probar que funciona, puedes abrir tu navegador en: `http://localhost:8081/forest_access/swagger-ui/index.html`)*
